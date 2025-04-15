@@ -48,7 +48,7 @@ if P_D2 < 0:
 else:
     print(f"The power dissipated in the diode is: {P_D2} W")
 
-U_D1 = U_D2
+U_D2 = U_D1
 I_D1 = (U_D2 - U_D01) / r_D1
 if I_D1 < 0:
     P_D1 = 0
