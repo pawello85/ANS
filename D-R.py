@@ -1,6 +1,6 @@
+# Skrypt liczący prąd, napięcie i moc w obwodzie z diodą oraz rezystorem
 import math
 
-# Convert inputs to float once
 E = float(input("Enter the voltage (E): "))
 print(f"E = {E} V")
 
@@ -16,7 +16,6 @@ print(f"U_D0 = {U_D0} V")
 r_D = float(input("Enter the diode resistance (rD): "))
 print(f"rD = {r_D} Ω")
 
-# Perform calculations with rounding to 4 decimal places
 Ix = round((E - U_D0) / (R + r_D), 4)
 Rx = round((R * r_D) / (R + r_D), 4)
 Ux = round(Ix * r_D + U_D0, 4)
