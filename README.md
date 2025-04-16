@@ -1,8 +1,9 @@
 # ANS
 
+---
 git clone https://github.com/pawello85/ANS
-
-D-R - dioda z równoległym rezystorem (obliczyć moc na diodzie)
+---
+## D-R - dioda z równoległym rezystorem (obliczyć moc na diodzie)
 
 Dane: E, R, R_0, U_D0, r_D
 
@@ -20,4 +21,5 @@ U_D = (Ux *R_0) / (Rx + R_0)
 I_D = (U_D - U_D0) / r_D  
 P_D = U_D * I_D  
 
-(jeśli wyliczyć delta U_D) to dU_D% = (Ux - U_D) / U_D0
+(jeśli wyliczyć delta U_D) to dU_D% = (Ux - U_D) / U_D0  
+---
