@@ -24,17 +24,17 @@ print(f"The current is: {Ix} A")
 print(f"The voltage is: {Ux} V")
 print(f"The resistance is: {Rx} Ω")
 
-Ud = round(Ux * R_0 / (Rx + R_0), 4)
-print(f"The voltage drop across the diode is: {Ud} V")
+U_D = round(Ux * R_0 / (Rx + R_0), 4)
+print(f"The voltage drop across the diode is: {U_D} V")
 
-Id = round((Ud - U_D0) / r_D, 4)
-print(f"The current through the diode is: {Id} A")
+I_D = round((U_D - U_D0) / r_D, 4)
+print(f"The current through the diode is: {I_D} A")
 
-Pd = round(Id * Ud, 4)
-if Pd < 0:
-    Pd = 0
+P_D = round(I_D * U_D, 4)
+if P_D < 0:
+    P_D = 0
     print("The power dissipated in the diode is negative. Setting to 0.")
-    print(f"The power dissipated in the diode is: {Pd} W")
+    print(f"The power dissipated in the diode is: {P_D} W")
 else:
-    print(f"The power dissipated in the diode is: {Pd} W")
+    print(f"The power dissipated in the diode is: {P_D} W")
 
