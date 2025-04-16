@@ -19,7 +19,7 @@ Dane: E, R, R_0, U_D0, r_D
 
 W = OFF
 
-Ix = (E - U_D0) / (R + r_D)
+Ix = (E - U_D0) / (R + r_D)  
 Ux = Ix * r_D + U_D0  
 Rx = (R * r_D) / (R + r_D)  
 
