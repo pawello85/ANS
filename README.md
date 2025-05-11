@@ -32,5 +32,6 @@ P_D = U_D * I_D
 
 (jeśli wyliczyć delta U_D) to dU_D% = (Ux - U_D) / U_D0 
 
+
 ---
 
