@@ -1,3 +1,5 @@
+//Program czyta napięcie na diodzie a nie średnie napięcie z pwm.
+//Aby zczytywać wartość w postaci napięcia średniego można to wyliczyć z (i * 5.0 / 255)
 #include <Wire.h> 
 #include <LiquidCrystal_I2C.h>
 

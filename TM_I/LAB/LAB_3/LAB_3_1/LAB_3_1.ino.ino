@@ -1,6 +1,4 @@
-//YWROBOT
-//Compatible with the Arduino IDE 1.0
-//Library version:1.1
+
 #include <Wire.h> 
 #include <LiquidCrystal_I2C.h>
 const float ANALOG = A0;
@@ -14,7 +12,7 @@ void setup()
   // Print a message to the LCD.
   lcd.backlight();
   lcd.setCursor(4,0);
-  lcd.print("Paweł Zabel");
+  lcd.print("Pawel Zabel");
   Serial.begin(9600);
   
   }
@@ -24,9 +22,9 @@ void setup()
 void loop()
 {
   voltage = analogRead(ANALOG);
-  Serial.println(voltage/200);
+  Serial.println(voltage * 5 / 1023);
   lcd.setCursor(9,2);
-  lcd.print(voltage/200);
+  lcd.print(voltage * 5 / 1023);
   delay(500);
 
 }

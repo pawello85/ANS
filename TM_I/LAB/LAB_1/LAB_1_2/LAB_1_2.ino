@@ -13,7 +13,7 @@ int kierunek = 0;
 bool Run = false; // Flaga do uruchomienia cyklu
 
 void setup() {
-  pinMode(B_1, INPUT);  // Przyciski bez pull-up, wymagają zewnętrznych rezystorów
+  pinMode(B_1, INPUT);  
   pinMode(B_2, INPUT);
   
   for (int i = 0; i < nLED; i++) {
@@ -59,7 +59,7 @@ void loop() {
         digitalWrite(LED[0], LOW);
       break;
     }
-    Run = false; // Po wykonaniu jednego cyklu, zatrzymaj animację
+    Run = false; // Zakończ cykl
   }
 
   B_1_Last = B_1_State;

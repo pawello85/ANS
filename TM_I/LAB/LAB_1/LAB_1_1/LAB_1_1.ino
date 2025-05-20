@@ -14,13 +14,13 @@ int tryb = 0;
 bool LastState = LOW;
 
 void setup() {
-  // put your setup code here, to run once:
-  //typ wejscie
+  
+  //inputs
   pinMode(B_1, INPUT);  
   pinMode(B_2, INPUT);
   pinMode(B_3, INPUT);
 
-  //typ wyjscie
+  //outputs
   pinMode(D_1, OUTPUT); 
   pinMode(D_2, OUTPUT);
   pinMode(D_3, OUTPUT);
@@ -55,7 +55,8 @@ void loop() {
   }
 
   switch(tryb){
-    case 0:
+    
+    case 0: //AND
       if (B_1_State == HIGH && B_2_State == HIGH){
         digitalWrite(D_1, HIGH);
       }
@@ -64,7 +65,7 @@ void loop() {
       }
     break;
 
-    case 1:
+    case 1: //OR
       if (B_1_State == HIGH || B_2_State == HIGH){
         digitalWrite(D_1, HIGH);
       }
@@ -72,8 +73,8 @@ void loop() {
         digitalWrite(D_1, LOW);
       }
     break;
-
-    case 2:
+    
+    case 2: //XOR
       if (B_1_State == HIGH != B_2_State == HIGH){
         digitalWrite(D_1, HIGH);
       }
