@@ -11,7 +11,8 @@ A = float(input("A [V] = "))
 
 R_C = float(input("R_C [Ohm] = "))
 R_B = float(input("R_B [Ohm] = "))
-# R_C = float(input("R_C [Ohm] = "))
+R_1 = float(input("R_1 [Ohm] = "))
+R_2 = float(input("R_2 [Ohm] = "))
 
 R_o = float(input("R_o [Ohm] = "))
 R_g = float(input("R_g [Ohm] = "))
@@ -21,6 +22,8 @@ r_CE = float(input("r_ce [Ohm] = "))
 print("\n---\nWyniki:")
 
 
+
+# Część A
 # 1)
 I_CX = Beta * I_b
 print("1)\nI_cx = Beta * I_b\nI_CX =",I_CX,"[mA]\n")
@@ -64,6 +67,8 @@ B = abs(k_uc * A)
 print("k_uc = ", k_uc)
 print("B =", B, "V\n---")
 
+
+
 # Część B
 # 1)
 
@@ -81,8 +86,8 @@ print("U_CEX = U_cc -(I_CX * R_C) =", U_CEX,"[V]\n")
 k_uo = round(-gm * r_wy,2)
 B = abs(k_uo * A)
 
-print("2)")
-print("B =", B, "V\n")
+print("2)", end=(" "))
+print("B =", B, "V", end=";")
 
 
 # 3)
@@ -90,8 +95,8 @@ print("B =", B, "V\n")
 k_u = round(k_uo * R_o / (R_o + r_wy),2)
 B = abs(k_u * A)
 
-print("3)")
-print("B =", B, "V\n")
+print("3)", end=" ")
+print("B =", B, "V", end=" ")
 
 # 4)
 
@@ -100,16 +105,27 @@ k_ue = round(k_u * R_BEI / (R_BEI + R_g),2)
 
 B = abs(k_ue * A)
 
-print("4)")
+print("4)", end=" ")
 print("B =", B, "V\n")
 
 
 
+# Część C
+# 1)
 
+R_x = R_1 * R_2 / (R_1 + R_2)
+U_x = U_cc * R_2 / (R_1 + R_2)
 
+I_BX = (U_x - U_BE) / R_x
+I_CX = Beta * I_BX 
 
+U_CEX = U_cc - (I_CX * R_C)
+print("I_CX =", I_CX*1000,"U_CEX =", U_CEX)
+# 4)
 
-
-
+R_BEII = R_BEI * R_2 / (R_BEI + R_2)
+k_ue = round(k_u * R_BEII / (R_BEII + R_g),2)
+B = abs(k_ue * A)
+print("B =", B)
 
 
