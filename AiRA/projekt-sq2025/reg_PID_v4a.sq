@@ -1,0 +1,3704 @@
+//wersja v4 - 
+// 2024-04-02 drobne poprawki w Help 
+// 2024-03-17 dołożono obiekt podwójnie całkujący Kv/(s-p)s
+
+// zlikwidowano korektę h po zmianie T (była błędna)
+// wprowadzono submenu Obiekt\Inicjacja podstawowych parametrów Kv, T  
+// menu Symulacje\zakres charakterystyk częstotliwościowych wMin, wMax
+
+
+// wersja v2h5 2023-12
+// zmiana sposobu detekcji stabilności w makeMargins 
+// obniżenie współczynników poprawkowych do korekty Ti 
+// dla PI Ti=4T/(1-2.5pT), dlaPID Ti=3T/(1-1.5pT) 
+//  2020-05
+// ujednolicić format wypisów w oknie komend - może spf?
+// tryb różnicowy w Bode - dość problematyczny - poprawić co najmniej wypis; 
+//         można też inaczej wyświetlać dane na pasku tytułu gdy KA i gdy ~KA
+// można pomyślec o dalszych opcjach specjalnych kursora dla czętotliwościowcyh
+//  - e: ekstremum char. amplitudowej, 5? - 3dB strefa 
+// tic-toc Oblicz czasowe 180ms/2000kroków
+
+title "reg_PID_v4"
+version
+{@
+"reg_PID_v4.sq"
+
+  ==== Aplikacja dydaktyczna do nauki właściwości układów regulacji 
+ 
+ wersja v4, 2-04-2024  
+ ©Jan Deskur
+@}
+help
+{@
+=== Schemat blokowy 
+
+Struktura połączeń na schemacie jest niezmienna. Obiekt regulacji składa sie z trzech bloków liniowych o  konfigurowalnych transmitancjach oraz wielowariantowego regulatora. Pracę należy rozpocząć od wyboru głównych parametrów obiektu Kv, T  z menu: Obiekt\Inicjacja podstawowych parametrów. 
+
+ Na schemacie jest wiele elementów interaktywnych, pozwalających ustawiać parametry bloków i sygnałów wejściowych oraz dokonywać wyboru sygnałów do wyświetlenia. Rodzaj interakcji objaśniany jest w pasku stanu u dołu ekranu. Pojedyncze kliknięcia (klik) wywołują przełączenia między dwoma stanami elementu. Kliknięcie z wciśniętym klawiszem  Shift (Shift+klik) zazwyczaj otwiera okno dialogowe do wprowadzenia parametru z klawiatury, lub/oraz wypisuje wybrane parametry w oknie komend.  Zmiany parametrów lub wariantów transmitancji można też wywołać rolką myszy lub klawiszami nawiasów kwadratowych ( ]|[ ). 
+ 
+Górny pasek tytułowo-objaśniający  można przełączyć w tryb wyświetlania marginesów stabilności oraz parametrów  sygnałów wejściowych, obiektu i regulatora.
+
+
+
+=== Wykresy czasowe i charakterystyki częstotliwościowe
+
+Aktywizacji sygnałów wejściowych (w,z,n) oraz wyboru sygnałów do wyświetlenia dokonuje się na schemacie blokowym. W charakterystykach częstotliwościowych jako sygnał wejściowy (mianownik transmitancji widmowej) przyjmowany jest ten z sygnałów , który był ostatnio aktywowany na schemacie. Wyświetlić można co najwyżej jeden sygnał z grupy niebieskiej i jeden z czerwonej, nie licząc zapamiętanych śladów po poprzednich wykresach.  Skale dla sygnałów czerwonych wyświetlane są po prawej stronie. Wyróżniony grubszą linią jest ten sygnał, który był ostatnio wybrany. Można to zmieniać (bez klikania w schemat) klawiszami [s],[u],[y] . 
+
+Typowych operacji graficznych na wykresach (powiększanie, przesuwanie) dokonuje się wybierając odpowiednie narzędzie z paska narzędziowego lub z menu Figure. Po zakończeniu tych operacji należy przywrócić tryb podstawowy  (Manipulate, Ctrl+1). Aby przywrócić autoskalowanie trzeba odznaczyć opcje Locked Scale z menu kontekstowego (prawy przycisk). Menu kontekstowe pozwala wybrać różne sposoby skalowania osi charakterystyk częstotliwościowych.  Na wykresach czasowych można dodatkowo zmieniać skale korzystając z elementów aktywnych w narożnikach ramki.
+
+Jeżeli na wykresach czasowych są widoczne sygnały wejściowe W i/lub Z - to można zmieniać ich parametry czasowe przeciągając poziomo  wyróżnione elementy aktywne.
+
+Z menu Okna, Opcje_wykresów można wybrać różne warianty prezentacji wyników. 
+
+
+===Kursory o--x
+
+Klawisz spacji uwidacznia/ukrywa kursor w kształcie znaku X. Po odblokowaniu ([k], klik w X) - kursor podąża za ruchem myszy, aż do zablokowania (ponownie: klik, lub [k]) . Zablokowany kursor można nieznacznie przesunąć rolką lub klawiszami kierunkowymi ( ↑||↓ ). Informacje o położeniu kursora i wartości sygnału lub charakterystyki wyświetlane są zamiast tytułu na górnej ramce wykresu. 
+
+Dla wykresów czasowych dostępny jest tryb różnicowy ([r]), w którym podawane są informacje o różnicach między kursorami X i O. Kursor O jest nieruchomy i w zwykłym trybie znajduje sie na początku wykresu (to=0). Klawiszem [o] można go przestawić na aktualną pozycję kursora X ; ponownie [o] lub spacja przywracają zwykły tryb to=0.  W innych zaawansowanych trybach pracy kursor X jest  () niewidoczny lub ustawiany automatycznie w szczególnym położeniu: [t]:wyświetlane są wskaźniki całkowe, [e]:ekstremum przebiegu, [5]:czas ustalania z 5% tolerancją
+
+
+
+
+===Klawisze funkcyjne
+
+[Ctrl+r]         :  przywracanie pierwotnych danych i ustawień \\
+[Ctrl+z]         :  wycofanie ostatniej zmiany (Undo)\\
+[Ctrl+Z]         :  przywrócenie wycofanej zmiany (Redo)\\    
+[Ctrl+1]         :  przywracanie podstawowego trybu pracy kursora ekranowego (Manipulate)\\
+[Ctrl+2,3,4]     :  inne tryby pracy kursora ekranowego\\ 
+[1,2,3,4,6,c]    :  ustawienia okien wykresów \\
+[  ] (spacja)    :  pokazanie/ukrycie kursorów o--x\\
+[k]              :  blokowanie/odblokowanie pozycji kursora ···x/--x\\ 
+[o]              :  przestawianie kursora o : (to=0)/(to=tx) \\    
+[r,t,e,5]        :  specjalne tryby pracy kursorów o--x\\ 
+[s,u,y]          :  sposób wyświetlania sygnałów niebieskich i czerwonych\\
+[<, >. B,I]      :  rozmiar i wygląd czcionki\\ 
+[a, f, g, m, l,↑,↓]  :  inne opcje wykresów \\ 
+[d]              :  regulacja ciągła/dyskretna(cyfrowa)  \\
+  
+
+@}
+
+variables 
+ //variable _implicit
+ variable   kyB = 1     // wsp. wzmocnienia skali B i skali R  
+ variable   kyR = 1     // dod. wsp. wzmocnienia dla skali R 
+ variable   yR0 = 0.0     // przesunięcie skali pgR
+ variable   yB0 = 0.0     // przesunięcie skali pgB
+ variable   winbg = [1,1,1]*0.95   // 0: czarne tło  ..   1: białe
+ variable   WBG = false     // true ==== białe tło  
+ variable   fontSize  = 14   //dla Wykresów   i schematu      (key: up,down  )
+ variable   B   = false     // Bold=true/false dla schematów  (key:b   )
+ variable   I   = false     // Italic=true/false dla schematów (key: i ) 
+ variable	id	= -1        // biezacy identyfikator
+ variable	tol	= 5	        // tolerancja dla czasów ustalania się (%)
+ variable	tolF= 0         // tolerancje dla charakterystyk amplitudowych wymuszeniowych i zakłóceniowych (do usunięcia)
+ variable	ixF = 0		// indeks punktu wykresów częstotliwościowych na który wskazuje kursor
+ variable	nic	= 0	    // dla zatrudnienia pustych procedur
+ ////zmienne "znacznikowe" - liczby naturalne 
+ variable   m    = 0    // stan modyfikatora (Shift) ustawiany przez overSchem
+ variable	typP = 1	// 1: K/s 2:K/(s-p) 3:K/(s-p)s  tf()-to ew. w przyszłości
+ variable   AltP = 0    // 1: a1.a0 zamiast K,p
+ variable	typO = 2	// 1:1, 2:exp(-sT), 3:Pade2 4:1/(1+sT/n)^n 5:tf(L,M)
+ variable	typN = 0	// typ nastaw regulatora:   0: swobodny, 1:ZN, 2:CHR 3:sym 4:swobodny, 5:mod , 6:CHR20%, 7:ZNs
+ variable	typH = 2	// 1:0, 2:1	 
+ variable	typSch = 1	// 1: ogólny, 2: reg.w, 3:reg.v, 4:reg.i, 5:reg.h, 6:reg.th, 7:reg.alfa, 8:reg.x
+ variable	typReg = 1	// 0: 2s, 1:P, 2:PI, 3:IP, 4:PI+ ,5:PID+ , (6:rst)
+ variable   ORA  = 0    // 1: Ogranicznik Regulatora Aktywny
+ variable   PWS	 = 1    // Parametry Widoczne na Schemacie 0:nic 1:1kursor 2:2kursory
+ variable	PWW	 = 0    // Parametry Widoczne na Wykresach (t) 0:nic 1:1kursor 2:2kursory -1: IA,ITA,..   -2:ex _    -3:ovs,tu
+
+ 
+ variable   KA   = 0;  // kursor x aktywny/nieaktywny
+ variable   KW   = 0;  // kursor x widoczny/ukryty
+ 
+ variable	AltN = 0    // 0:nastawy std (Kp,Ti,..), 1: nastawy alternatywne (Kp,Ki,..)
+ variable	Awup = 0    // anti-windup 
+ variable	fHz	 = 1    // czestotliwosc w Hz zamiast rad/s
+ variable	typB = 1    // rodzaj char. Bodego 1:|/W|,2:|/Z|, 3:arg(/W),4:arg(/Z)
+ variable	SD	= 0	    // System Dyskretny:  0:system ciagly 1: SystemDyskretny
+ variable	MD  = 1     // Metoda Dyskretyzacji 1:tustin (inne kasuję)
+ variable	pgB	= 2	    // przebieg niebieski: pgB = 1:y  2:y"	3: e=w-y	  4:y'
+ variable	pgR	= 1	    // przebieg czerwony : pgR = 1:u/Kp	  2:u'/Kp	3:u" = (u'-z)/Kp
+ variable	H2O = 0		// znacznik przestawienia bloków H i O
+ variable	ZoS	= 0	    // Zostaw Slad na wykresach
+ 
+// NL, NU, NY, PWW, ZoS,fHz, wp, wk, KW,KA, typB,nB
+
+ variable	NTol= 1 // No Tolerance Band
+ variable	NM	= 0 // No Margin - 
+ variable	NL  = 0 // No Legend
+ variable	NG	= 1	// No Grid
+ variable	NU  = 1	// No U-traces
+ variable	NY	= 0	// No Y-traces
+ variable	NW  = 1 // No w-traces
+ variable	NZ	= 1	// No z-trace 
+ variable	AW	= 0	// active w(t)
+ variable	AZ	= 1	// active z(t)
+ variable	AN	= 0	// active n(t)
+ variable	UN	= 0	// Uniformely distributed Noise (~UN == normally distributed)
+ variable	LN	= 0	// Live Noise (nieustanna zmiana seed) 
+ variable	seed= 0.5	// dla rand, randn
+ variable	zrzut=false	// true: zrzut wskaźników do okna komend
+ //// parametry obiektu, jednostki bazowe
+ variable	K   =  1    // param. procesu (bloki P,O) w JEDNOSTKACH FIZYCZNYCH
+ variable   T   =  1    // param. procesu (bloki P,O) w JEDNOSTKACH FIZYCZNYCH
+ variable	yB	=  1        // jednostka bazowa dla zmiennych y (yB=1 - na razie, potem yB=W?)
+ variable	wB	=  1        // jedn. bazowa dla pulsacji , wB=1/T
+ variable	uB	=  40	    // jedn. bazowa dla u,z,u-z uB=yB/K/T
+ variable	kB	=  40 	    // jedn. bazowa dla Kp regulatora kB=yB/uB=1/K/T 
+ //// parametry obiektu w JEDNOSTKACH BAZOWYCH (JB)
+ variable	p	=  -1   // biegun procesu w JB 
+ variable   b1  =  0        //wpółczynniki  O(s) JB=T
+ variable   b2  =  0        // JB=T^2
+ variable   a1  =  1        // wsp. mianownika JB=T
+ variable   a2  =  0.25       //  JB=T^2  
+ variable	LO  =  [1]      // licznik transmitancji O(s) w JB
+ variable   MO  = [0.4 1 1 ]// mianownik transmitancji O(s) w JB
+ variable   nO  = 5 		// nO=rząd inercji
+ variable	d	= 0			// czyste opóźnienie (JB)
+ variable	Ts	 			// okres próbkowania(JB) dla SD==1
+ //variable	h	// w (JB) - aby zapobiec zbyt długim obliczeniom
+ 
+ //// parametry wymuszeń (w JB)
+ variable   Nh  = 10000     // maksymalna liczba kroków
+ variable	h   = 0.05		// krok obliczeń
+ variable	tW,W,tZ0,tZ,Z	// wymuszenia czasowe (JB)
+ variable	nSigma = 0.02	//	odchylenie std (dla obu rozkladow: normalnego i rownomiernego) 
+ variable	tMax=   40;		// czas końcowy (JB)
+ 
+ variable   wMin =  0.001;   // minimalna częstotliwośc (JB)
+ variable   wMax =  100;	 // maksymalna częstotliwość (JB) 
+ 
+//// kursory o--x 
+ variable	tp  =   0
+ variable   tk  =   1		// pozycje kursorów (JB)
+ variable	wp  =   0
+ variable   wk  =   1	    // pozycja kursorów częstotliwościowych
+ ////nastawy regulatora w JB
+ variable   Kp =	1       // Kp regulatora
+ variable   Ti =	10.0	// Ti regulatora
+ variable   b	=	0.25 	// wsp. wagi wejścia wartości zadanej w torze P
+ variable   c	=	0.0 	// wsp wagi w torze D 
+ variable   Td =	0.5 	// czas wyprzedzenia regulatora
+ variable   Nd =	8.0 	// wsp. filtru: Tfd=Td/Nd
+ variable	uMax =  2.5		// górne ograniczenie u (JB)
+ variable	uMin = -2.5	    // dolne ograniczenie u (JB)
+ 
+ variable	Ps,Os,Cs,Fs,Hs	// transmitancje operatorowe bloków
+ variable	sOL				// system otwarty (za reg, v->u) (ss, dyskretny)
+ variable	M1, M2, M3		// pamięci nastaw regulatora
+ variable	SkU	= 0			// skala U (zamiast Y) na wykresach
+ variable	t, u, y			// wyniki symulacji czasowej (JB)
+ variable   w,Ujw,Yjw       // charakterystyki częstotliwosciowe  
+ variable   GM, PM, DM, Ms  // marginesy
+ variable   w1, ws, wpi 
+ variable   wL,      Ljw     // char. otwartej pętli
+ userinterface
+extension "define"
+////define - identyfikatory obiektów interakcyjnych
+
+////sygnały na schemacie i wykresach czasowych
+ define idtMax = _auto
+ define idKA = _auto
+ 
+ define idW	 = _auto // drag (tW,W)
+ define idZ	 = _auto // drag (tZ,Z)
+ define idZ0 = _auto // drag (tZ0)
+ define idwa = _auto // w aktywny/nieaktywny
+ define idza = _auto // z aktywny/nieaktywny
+ define idna = _auto // noise aktywny/nieaktywny
+ define idns = _auto // zmiana seed
+ define idw	 = _auto // w widoczny/ukryty 
+ define idz	 = _auto // z widoczny/ukryty 
+ define idy	 = _auto  // j.w. 
+ define idyp = _auto 
+ define idyb = _auto
+ define ide	 = _auto 
+ define idu	 = _auto 
+ define idup = _auto  
+ define idub = _auto
+
+ //// bloki transmitancyjne
+ define idO	 = _auto
+ define idP	 = _auto
+ define idH	 = _auto
+ //// parametry bloków
+ define idCb  = _auto
+ define idCKp = _auto
+ define idCTi = _auto
+ define idCKi = _auto
+ define idCTd = _auto
+ define idCKd = _auto
+ define idCNd = _auto
+ define idCTf = _auto
+ define idCc  = _auto
+ define idOT  = _auto
+ define idOLM = _auto	
+ define idOL  = _auto
+ define idOM  = _auto
+ define idOn  = _auto
+ define idOa2 = _auto
+ define idOa1 = _auto
+ define idOb2 = _auto
+ define idOb1 = _auto
+ define idPK  = _auto
+ define idPp  = _auto
+ define idR	  = _auto	 // typ regulatora (na schemacie)
+ define idNwg = _auto    // nastawy wg
+ define idRLim= _auto    // ogranicznik wyjścia regulatora
+ define idRaw = _auto    // anti-windup 
+ define idCeH  = _auto   // uchyb histerezowy reg.2s
+ ////struktura schematu i nastawy
+ define idH2O = _auto
+ define idTs  = _auto
+ define idSD  = _auto	// 0: ciągły, 1: dyskretny
+ define idMD  = _auto	 // 1: tustin, 2: zoh (3:foh)
+ define idSch  = _auto	// pasek tytułowy schematu(np.marginesy GM, DM, PM)
+////wskaźniki
+
+ define idTolT = _auto	//tolerancja czasu ustalania się
+ define idTolF = _auto	// linia pozioma na wykresach Bodego 
+//// częstotliwościowe
+ define idYW  = _auto	// linie Y na wykresach częst.
+ define idUW  = _auto // linie U na wykresach częst.
+ define idYT  = _auto
+ define idUT  = _auto 
+ define idTime	= _auto;
+ define idFreq	= _auto;
+ 
+ define idBlueMark = _auto;
+ define idRedMark  = _auto;
+ 
+userinterface
+extension "keydown"
+
+ keydown "[" (AltP,a1,a2,b1,b2,h,Ts,uMax,uMin,nic,typO,typReg,ORA,typP,typH,typSch,nO,W,AW,NW,Z,AZ,NZ,nSigma,AN,Kp,Ti,b,Td,Nd,c,K,T,p,H2O,AltN,typN,PWS,SD,tMax,tZ0,tZ,tW) =scrollSchem( ...
+ _v,h,Ts,uMax,uMin,id,1,typO,typReg,ORA,typP,typH,typSch,nO,W,AW,NW,Z,AZ,NZ,nSigma,AN,Kp,Ti,b,Td,Nd,c,K,T,p,H2O,AltN,typN,PWS,SD,tMax,tZ0,tZ,tW,M1,0) 
+ keydown "]" (AltP,a1,a2,b1,b2,h,Ts,uMax,uMin,nic,typO,typReg,ORA,typP,typH,typSch,nO,W,AW,NW,Z,AZ,NZ,nSigma,AN,Kp,Ti,b,Td,Nd,c,K,T,p,H2O,AltN,typN,PWS,SD,tMax,tZ0,tZ,tW) =scrollSchem( ...
+ _v,h,Ts,uMax,uMin,id,-1,typO,typReg,ORA,typP,typH,typSch,nO,W,AW,NW,Z,AZ,NZ,nSigma,AN,Kp,Ti,b,Td,Nd,c,K,T,p,H2O,AltN,typN,PWS,SD,tMax,tZ0,tZ,tW,M1,0) 
+ 
+ keydown "k"  KA  = PWW>0?not(KA):0 ;  
+ keydown "I" (fontSize,B,I)  = setfigstyle(fontSize, B     ,not(I))
+ keydown "B" (fontSize,B)    = setfigstyle(fontSize, not(B), I    )  
+ 
+ keydown "a" ZoS = not(ZoS)
+ keydown "f" fHz = not(fHz)
+ keydown "l" NL	 = not(NL) 
+ keydown "u" (NU,SkU) = deal(~NU , NU  )
+ keydown "y" (NY,SkU) = deal(~NY , ~NY )
+ keydown "w" NW	 = not(NW)
+ keydown "W" AW	 = not(AW)
+ keydown "z" NZ	 = not(NZ)
+ keydown "Z" AZ	 = not(AZ)
+ keydown "n" LN	 = negacjaLN(LN,AN)
+ keydown "N" AN	 = not(AN)
+ keydown "d" (SD,typN,Ts) = deal(not(SD),0, max(Ts,h) ) 
+ keydown "h" H2O = not(H2O)
+ keydown "s" (SkU,NY,NU) = deal(not(SkU),NY,NU)
+ 
+ keydown "0"  (t,u,y,w,Ujw,Yjw,wL,Ljw) = empty_tuy
+ 
+ keydown " " (PWS,KA,KW,PWW,tp,wp) = deal(PWW== 0? 1:0, 0, PWW== 0? 1:0 , PWW== 0?1:0  , PWW== 1?0:0  , PWW==1? 0 : 0)
+ keydown "r" (KW,PWW,tp) = deal(PWW== 2?1:1 , PWW== 2?1:2  , PWW== 2?tp:tp )
+ keydown "e" (KW,PWW,tp,wp) = deal(PWW==-2?1:1 , PWW==-2?1:-2 , PWW==-2?tp:tp , PWW==-2?0:wp ) 
+ keydown "t" (KW,PWW,tp) = deal(PWW==-1?0:1 , PWW==-1?0:-1 , PWW==-2?0:tp )
+ keydown "5" (KW,PWW,tp,NTol,tol) = deal(PWW==-3?1:1 , PWW==-3?1:-3 , PWW==-3?tp:tp , PWW==-3?0:1 , 5)
+ keydown "o" (tp,wp,PWW) = deal(tp? 0 : tk , tp? 0 : wk , tp? 1 : 2) 
+ keydown "m" ustawMargin 
+ keydown "g" ustawGrid
+ keydown "1" subplots('Schemat blokowy')
+ keydown "2" layout(2)
+ keydown "3" layout(3)
+ keydown "4" layout(4)
+
+ keydown "6" layout(6)
+ keydown ")"  tol = 10 
+ keydown "("  tol = 9 
+ keydown "&"  tol = 7 
+ keydown "*"  tol = 8
+ keydown "^"  tol = 6 
+ keydown "%"  tol = 5
+ keydown "$"  tol = 4
+ keydown "#"  tol = 3
+ keydown "@"  tol = 2
+ keydown "!"  tol = 1
+ keydown "c" layout(1)
+ keydown "C"  clc
+ keydown "L" disp('-')
+ keydown "E" (t,u,y)= make_tuy(sOL,uMax,uMin,d,typReg,typO,AW,tW,W,AZ,tZ0,tZ,Z,AN,UN,nSigma,seed,tMax,pgB,pgR,h,Awup,SD)
+ keydown  (fontSize,nic, KW, KA, kyB, kyR,yB0, yR0, tp, tk, PWW, NTol,tol,wk) = paramUp(_v,_key,0,_m,_id)
+ keydown "i" (fontSize,WBG) = deal(setfigstyle(fontSize,B,I, [1,1,1]*not(WBG) + winbg*WBG ),not(WBG))
+ //keydown "?" myOutputHandler(K,T,p)
+ //keydown "/" (K,T,p) = myInputHandler()
+ 
+userinterface
+extension "init" 
+ init                       (NM,NG)     =   init(_v)
+ init (wMin,wMax,h,Ts,tMax,AW,W,tW,AZ,Z,tZ0,tZ,pgB,pgR,NU,NY,NW,NZ,AN,UN,nSigma,LN,seed) = paramSym
+ init 				(wB,yB,uB,kB)       =   makeBazowe  ( K , T ) 
+ init                       (M1,M2,M3)  =	initMem
+ init                       (t,u,y)	    =   make_tuy(sOL,uMax,uMin,d,typReg,ORA,typO,AW,tW,W,AZ,tZ0,tZ,Z,AN,UN,nSigma,seed,tMax,pgB,pgR,h,Awup,SD)
+ init                   (w,Ujw,Yjw)     =   make_wUY(wMin,wMax,sOL,Fs,Cs,Os,Ps,Hs,d,T,K,H2O ,SD, pgB, pgR, typB)  
+ init (GM,PM,DM,Ms,wpi,ws,w1,wL,Ljw)    =   makeMargins(Cs,Os,Ps,Hs,d,h,Ts,T,typH,typO,SD)
+userinterface
+ idle       (seed)      =   liveNoise(LN,seed)
+extension "make"
+ make               (wB,yB,uB,kB)       =   makeBazowe  ( K , T ) 
+ make       (sOL,Fs,Cs,Os,Ps,Hs,d)      =   makeSys(b2,b1,a2,a1,h,Ts,SD,MD,p,Kp,Ti,b,c,Td,Nd,uMax,typReg,typO,typP,typH,H2O,LO,MO,nO,Awup,T) //tymczasowo h zamiast h
+ make                       (t,u,y)	    =   make_tuy(sOL,uMax,uMin,d,typReg,ORA,typO,AW,tW,W,AZ,tZ0,tZ,Z,AN,UN,nSigma,seed,tMax,pgB,pgR,h,Awup,SD)
+ make                      (w,Ujw,Yjw)  =   make_wUY(wMin,wMax,sOL,Fs,Cs,Os,Ps,Hs,d,T,K,H2O ,SD, pgB, pgR, typB) 
+ make   (GM,PM,DM,Ms,wpi,ws,w1,wL,Ljw)  =   makeMargins(Cs,Os,Ps,Hs,d,h,Ts,T,typH,typO,SD)
+userinterface
+
+extension "import export idle"
+ export "  Parametry" (_xdata,_xdatatype) = eksportParam(h,Ts,SD,MD,K,T,p,Kp,Ti,b,Td,Nd,c,typReg,typO,typP,typH,H2O,nO)
+ import "  Parametry" (h,Ts,SD,MD,K,T,p,Kp,Ti,b,Td,Nd,c,typReg,typO,typP,typH,H2O,nO) = importParam(_xdata,_xdatatype)
+userinterface
+beginmenu "Obiekt" 
+    //beginsubmenu "Inicjacja podstawowych parametrów" 
+		menu "Inicjacja podstawowych parametrów"
+				(AltP,K,T,typN) = deal( 0 , dialogX(K,1,str='Wzmocnienie prędkościowe obiektu K ᵥ = %6s' ) ,...
+													dialogX(T,1,0,3e6,str='Sumaryczne opóźnienie w pętli regulacji [sek]  T = %4s'),0)
+//				(T,typN ) = dialogX(T,1,0,3e6,'Opóźnienie T[sek]')
+//        menu "Sumaryczne opóźnienie w pętli regulacji  	T"	
+//				(T,typN ) = dialogX(T,1,0,3e6,'Opóźnienie T[sek]')		
+//	endsubmenu	
+separator	
+	beginsubmenu "proces   P(s) ≡ Y''(s) / U''(s)"
+        menu "całkujący   P(s) = K ᵥ / s 	K ᵥ" _checkmark(~AltP & (typP==1)) ...
+                (typP,AltP,K,typN) = deal(1 , 0 , dialogX(K,1,str='Wzmocnienie całkowe K ᵥ = %6s' ) , 0)
+		menu "inercyjny   P(s) = K ᵥ / (s-p)   	p" _checkmark(~AltP & (typP==2)) ...
+                (typP,AltP,p,typN) = deal( 2 , 0 , dialogX(p,wB,str='biegun %6srad/s') , 0 )
+		menu "2 rzędu  P(s) = Kᵥ  / (s - p)∙s"   _checkmark( (typP==3) & (~AltP) ) ...
+				(typP,AltP,typN) = deal(3, 0, 0); 				
+separator
+		menu "całkujący P(s) = 1 / (a₁s)	a₁ = 1 / K ᵥ" _checkmark( AltP & (typP==1))	...
+               (typP,AltP,K,typN) = deal( 1 , 1 , 1/dialogX(1/K , 1 , 1/4/K , 4/K,str='współczynnik a₁ = %6s') , 0 )	
+        menu "inercyjny P(s) = 1 / (a₁s + a₀)	a₀ = -p/ K ᵥ"	_checkmark(AltP & (typP==2)) ...
+               (typP,AltP,p,typN) = deal(2,1, dialogX(-p/K , 1/T,str='współczynnik a₀ = %6s')*(-K) , 0 )
+		menu "2 rzędu P(s) = 1  / (a₁s + a₀)∙s"   _checkmark( (typP==3) & (AltP) ) ...
+				(typP,AltP,typN) = deal(3, 1, 0); 
+	endsubmenu
+
+	beginsubmenu "blok wykonawczy O(s) ≡ U'(s) / U(s)"
+		menu "idealny: O(s) = 1"								   _checkmark(typO==1) typO=1
+separator
+        menu "opóźniający:  O(sT) = " nic=0
+		menu "      exp(-sT)"						   _checkmark(typO==2) typO=2
+		menu "      ( s²T²-6sT+12 ) / ( s²T²+6sT+12 )"   _checkmark(typO==3) typO=3
+		menu "      Pade2( sT/2 ) * Bessel2( sT/2 )"		   _checkmark(typO==4) typO=4
+		menu "      exp(-sT/2) / (1+sT/2)"			   _checkmark(typO==5) typO=5
+		menu "      1 / (1+sT/r)ʳ"					   _checkmark(typO==6) (typO,nO)=deal(6,9)
+        menu "opóźnienie  	T[sek]"		  (T,typN ) = dialogX(T,1)        
+separator
+        menu "transmitancja wymierna :" nic=0
+//	menu "O7=tf(L,M)"	 _enable(1)			   _checkmark(typO==7) typO=7  
+        menu "      (b₁s+1) / (a₁s+1)  	[ b₁ , a₁ ]" _checkmark(typO==7) ...
+               (typO,b1,a1,typN) = deal( 7 , dialogX(b1,T,str='współczynnik b₁ = %6ss') , dialogX(a1,T,str='współczynnik a₁ = %6ss') , 0 )
+               
+        menu "      (b₂s²+b₁s+1) / (a₂s²+a₁s+1) 	[ b₂ , a₂ ]" _checkmark(typO==8) ...
+              (typO,b2,a2,typN) = deal( 8 , dialogX(b2,T^2,str='współczynnik b₂ = %6ss²') , dialogX(a2,T^2,str='współczynnik a₂ = %6ss²') , 0 )
+         
+        menu "      (bᵣsʳ..+b₀) / (aᵣsʳ..+a₀)	[..b₀] [..a₀]" _checkmark(typO==9)
+               (typO,LO,MO,typN) = deal(9,dialogLO(LO, T, str='[ bᵣ .. b₀ ] = '),dialogLO(MO, T, str='[ aᵣ .. a₀ ] = ') , 0 )
+               
+	endsubmenu		
+ separator	
+	beginsubmenu "blok sprzężenia H(s) ≡ Y(s) / Y'(s)"
+		menu " przerwa w torze pomiarowym	H(s) = 0"					  _checkmark(typH==1) typH=1
+		menu " idealny tor pomiarowy	H(s) = 1"					  _checkmark(typH==2) typH=2
+	endsubmenu
+endmenu
+beginmenu "Regulator "
+	beginsubmenu " typ regulatora"
+        menu " 2s : dwustawny"                      _checkmark(typReg==0)  (typReg,typN,ORA) = deal(0,0,1)
+        separator
+		menu " P   : proporcjonalny"					_checkmark(typReg==1)  (typReg,typN) = deal(1,0)
+		menu " PI  : proporcjonalno-calkujacy"			_checkmark(typReg==2)  (typReg,typN) = deal(2,0)
+		menu " IP  : PI, z wylaczonym torem P dla sygnalu 'w'"	_checkmark(typReg==3)  (typReg,typN) = deal(3,0)
+		menu " PI+ : PI, z wsp. wagi (b) dla sygnalu zadanego w torze P"	_checkmark(typReg==4)  (typReg,typN) = deal(4,0)
+		menu " PID+: PID (prop.-calk.-rozniczkujacy), z wsp. wagi b,c" _enable(1) ...
+														_checkmark(typReg==5)  (typReg,typN) = deal(5,0) 
+	endsubmenu
+	beginsubmenu " nastawy dla liniowego zakresu pracy"
+		menu "   standardowe  (Kp,Ti,Td,N)"	    _enable(typReg>0)   _checkmark((AltN==0)|(AltN==2))	 AltN = 0
+		menu "   alternatywne (Kp,Ki,Kd,Tf)"	_enable(typReg>0)   _checkmark((AltN==1)|(AltN==3))	 AltN = 1
+		separator
+		menu " wg wzorow "	_enable(typP<3) nic=0
+		menu "  CHR   (Chien-Hrones-Reswick, ovs 0%)"	_enable((typReg>0)&(typP<3)) _checkmark(typN==1) (Kp,Ti,Td,typN,typReg)=autoNastawy(Kp,Ti,Td,1,typReg,typP,p ,SD,Ts )
+		menu "  ZN    (Ziegler-Nichols, freq.method)"	_enable((typReg>0)&(typP<3)) _checkmark(typN==2) (Kp,Ti,Td,typN,typReg)=autoNastawy(Kp,Ti,Td,2,typReg,typP,p,SD,Ts )
+		menu "  CHR2  (Chien-Hrones-Reswick, ovs20%)"	_enable((typReg>0)&(typP<3)) _checkmark(typN==3) (Kp,Ti,Td,typN,typReg)=autoNastawy(Kp,Ti,Td,3,typReg,typP,p,SD,Ts )
+		menu "  ZNs   (Ziegler-Nichols, step method)"	_enable((typReg>0)&(typP<3)) _checkmark(typN==4) (Kp,Ti,Td,typN,typReg)=autoNastawy(Kp,Ti,Td,4,typReg,typP,p,SD,Ts )
+		// menu "  mod   (Kessler, kryt. modulu)"      _enable(typReg==1|(typReg>0)&(typP>1))  _checkmark(typN==5) (Kp,Ti,Td,typN,typReg)=autoNastawy(Kp,Ti,Td,5,typReg,typP,p,SD,Ts )
+		// menu "  sym   (Kessler, kryt. symetrii)"    _enable(typReg>1)		  _checkmark(typN==6) (Kp,Ti,Td,typN,typReg)=autoNastawy(Kp,Ti,Td,6,typReg,typP,p,SD,Ts )
+	
+	endsubmenu	
+	separator
+	menu "elementy nieliniowe:"		_checkmark(ORA) 	(ORA,typReg,Awup) = negacjaORA(ORA,typReg,Awup)//not(ORA)&1
+	menu "    ograniczenie górne wyjścia u regulatora:	uMax"		                _enable(ORA)	uMax = dialogX(uMax,uB,0,99999999)//dialogP2(x0,xn0, xB=1 , xMin=-inf, xMax=inf,str='Wartosc parametru = ')
+	menu "    ograniczenie dolne wyjścia u regulatora:	uMin"			            _enable(ORA)	uMin = dialogX(uMin,uB,-999999999,uMax)
+	menu "    uklad anty-windup dla regulatorow PI .. PID "	 _checkmark(Awup>0) _enable((ORA)&(typReg>1))  Awup = not(Awup)
+    menu "    uchyb histerezy regulatora dwustawnego 2s	eH"    _enable(typReg==0) Kp = dialogEH(Kp,uMax)
+	separator	
+	beginsubmenu " zapisz nastawy do pamięci :" 
+	menu "1M"	(M1,typN)=zapiszNastawy(typReg,typN,Kp,Ti,b,c,Td,Nd,T,K,p,typP,typO,nO,1)
+	menu "2M"	(M2,typN)=zapiszNastawy(typReg,typN,Kp,Ti,b,c,Td,Nd,T,K,p,typP,typO,nO,2)
+	menu "3M"	(M3,typN)=zapiszNastawy(typReg,typN,Kp,Ti,b,c,Td,Nd,T,K,p,typP,typO,nO,3)	
+	endsubmenu
+	beginsubmenu " wczytaj nastawy z pamięci :"			//	nic=0 // typN=0
+	menu " 1M " (typReg,typN,Kp,Ti,b,c,Td,Nd)=wczytajNastawy(M1,T,K,1 )
+	menu " 2M " (typReg,typN,Kp,Ti,b,c,Td,Nd)=wczytajNastawy(M2,T,K,2 )
+	menu " 3M " (typReg,typN,Kp,Ti,b,c,Td,Nd)=wczytajNastawy(M3,T,K,3 )
+	endsubmenu
+ endmenu 
+beginmenu "Symulacje"
+separator
+	menu "  zresetuj parametry  " (wMin,wMax,h,Ts,tMax,AW,W,tW,AZ,Z,tZ0,tZ,pgB,pgR,NU,NY,NW,NZ,AN,UN,nSigma,LN,seed)	  = paramSym 
+separator
+	menu "  zakres częstotliwości  	ωMin , ωMax"   (wMin,wMax)  = deal(dialogX( wMin,1/T,wMax*1e-6,1e-1,'Minimalna pulsacja charakterystyk częstotliwosciowych [rad/s]' ),dialogX( wMax,1/T,1e1,wMin*1e6 , 'Maksymalna pulsacja charakterystyk częstotliwościowych [rad/s]'));
+	menu "  czas końcowy	tMax"		                tMax  = dialogX( tMax,T,h ,h*Nh ) 
+
+	menu "  krok obliczeń 	h"     _enable(~SD)             h = dialogX( h,T,max(0.005,tMax/Nh),tMax )  
+    menu "  maksymalna liczba kroków 	Nh"                 Nh = dialogNr( Nh, 10, 1e5,'Nh = ' )     
+separator 
+	menu " [d]  dyskretyzacja systemu "  _checkmark(SD)  (SD,typN,Ts) = deal(not(SD),0, max(Ts,h) ) 
+	menu " okres próbkowania 	Ts"         _enable(SD)	    (Ts,typN) = dialogX( Ts,T,h,1 ) 
+	// beginsubmenu "  metoda konwersji s->z : " 
+	// menu "	  tustin  "		_enable(SD==1) _checkmark((SD==1)&(MD==1)) MD=1
+	// menu "	  zoh "			_enable(SD==1) _checkmark((SD==1)&(MD==2)) MD=2
+	// menu "	  foh "			_enable(SD==1) _checkmark((SD==1)&(MD==3)) MD=3
+	// endsubmenu
+endmenu
+beginmenu "Opcje wykresów"
+
+	menu "[a]   zostaw/usuń ślady "	 _checkmark(ZoS)   ZoS = not(ZoS)
+	menu "[f]   f(Hz) / ω(rad/s)"    _checkmark(fHz)   fHz = not(fHz)
+   	//menu "[s]   skale {u,z..} / {y,w,..} "	_checkmark(SkU) SkU	 = not(SkU)
+separator
+    menu "    [>]   zwiększ czcionkę "     fontSize = setfigstyle(fontSize+2,B,I)
+    menu "    [<]   zmniejsz czcionkę "    fontSize = setfigstyle(fontSize-2,B,I)
+ //   menu "    [B]   włącz/wyłącz pogrubienie" _checkmark(B)   (fontSize,B,I)=setfigstyle(fontSize, not(B), I) 
+separator 
+
+   
+menu "pokaż/ukryj:" nic=0
+	menu "    [y]   linie niebieskie"	            NY = not(NY)
+	menu "    [u]   linie czerwone "	            NU = not(NU)
+	menu "    [ l ]  legendę    "		            NL = not(NL)
+	beginsubmenu "    [   ]  kursory o--x"
+    menu "  [    ] zwykłe: tₓ , tₒ=0  "      (KW,PWW,tp) = deal(PWW== 1?0:1 , PWW== 1?0:1  , PWW== 1?0:0 )
+    menu "  [ r ] różnicowe:  Δt=tₓ-tₒ "       (KW,PWW,tp) = deal(PWW== 2?0:1 , PWW== 2?0:2  , PWW== 2?0:tp )
+    menu "  [ o ]  tₒ=0  / tₒ=tₓ"                  (tp,PWW) = deal(tp? 0 : tk, tp? 1 : 2) 
+    menu "  [ t ] wskaźniki całkowe"  (KW,PWW,tp) = deal(PWW==-1?0:1 , PWW==-1?0:-1 ,  PWW==-2?0:tp )
+    menu "  [ e ] ekstremum, wart.ustalona"     (KW,PWW,tp) = deal(PWW==-2?0:1 , PWW==-2?0:-2 , PWW==-2?0:tp ) 
+ 
+    menu "  [ 5 ] czas ustalania z tol.5%"  (KW,PWW,tp,NTol,tol) = deal(PWW==-3?0:1 , PWW==-3?0:-3 , PWW==-3?0:tp , PWW==-3?0:1 , 5)
+   
+    
+  endsubmenu    
+endmenu
+beginmenu "Okna"    
+		//menu "ustawienia okien wykresow:" nic=0
+	menu "    [1]  Schemat blokowy      "		subplots('Schemat blokowy')
+    menu "    [2]  Schemat, Czasowe "                   layout(2)
+	menu "    [3]  Schemat, Czasowe, Bode (mag)  "	    layout(3)
+	menu "    [4]  Schemat, Czasowe, Bode, Nyquist_OL"	layout(4)
+	menu "    [6]  4 + Czasowe + Nyquist otw.pętla"     layout(6) 
+	menu "    [c]  tylko czasowe "				        subplots('Odpowiedzi czasowe')
+  
+ endmenu  
+
+figure "Schemat blokowy"
+draw drawSchemat(_v,GM,DM,PM,Cs,Os,Ps,Hs,d,h,nSigma,UN,W,tW,Z,tZ,tZ0,typSch,typO,typP,typH,typReg,ORA,typN,AW,AZ,AN,LN,pgB,pgR,NY,NU,NW,NZ,Kp,Ti,b,c,Td,Nd,T,K,p,H2O,PWS,nO,SD,MD,Ts,AltN,uMax,uMin,Awup,id,m)
+ mouseup   (AltP,SkU,a1,a2,b1,b2,h,uMax,uMin,M1,nSigma,W,tW,Z,tZ,typB,typSch,typO,typP,typH,typReg,ORA,Awup,typN,AW,AZ,AN,UN,LN,pgB,pgR,NY,NU,NW,NZ,Kp,Ti,b,c,Td,Nd,T,K,p,H2O,PWS,nO,LO,MO,SD,MD,Ts,AltN,tMax,tZ0)=...
+ upSch(_v,Cs,Os,Ps,Hs,d,h,uMax,uMin,M1,nSigma,W,tW,Z,tZ,typB,typSch,typO,typP,typH,typReg,ORA,Awup,typN,AW,AZ,AN,UN,LN,pgB,pgR,NY,NU,NW,NZ,Kp,Ti,b,c,Td,Nd,T,K,p,H2O,PWS,nO,LO,MO,SD,MD,Ts,AltN,tMax,tZ0,_id,_dx,_dy,_m,2)
+
+ mouseup idSch   PWS = not(PWS)
+
+ mousescroll(AltP,a1,a2,b1,b2,h,Ts,uMax,uMin,_msg,typO,typReg,ORA,typP,typH,typSch,nO,W,AW,NW,Z,AZ,NZ,nSigma,AN,Kp,Ti,b,Td,Nd,c,K,T,p,H2O,AltN,typN,PWS,SD,tMax,tZ0,tZ,tW)=
+	scrollSchem(_v,h,Ts,uMax,uMin,id,_dy,typO,typReg,ORA,typP,typH,typSch,nO,W,AW,NW,Z,AZ,NZ,nSigma,AN,Kp,Ti,b,Td,Nd,c,K,T,p,H2O,AltN,typN,PWS,SD,tMax,tZ0,tZ,tW,M1,_m)
+    
+ mousescroll idSch  typSch	=	PWS? typSch : scrollY(_dy,typSch,1,(typP==3)?8:1,(typP==3)?9:7)
+ mousescroll 0 nic = 0
+ 
+mouseover (_msg,id,_cursor,m) = overSchem(PWS,AN,typReg,_id,_m) // powinno być (_id,_m)
+figure "Odpowiedzi czasowe"
+	draw		drawCzasowe( _v,t,SkU);//,t,tp,tk,SkU)
+    mousedrag   ( nic,KW,KA,NY,NU,tp,tk,NTol,PWW,kyB,yB0,kyR,yR0, wp )    = dragCzasowe(_v, _x1, _m,_id)
+	mousedrag	idW	 ( W , tW ) = dragW	 (_v, _dx,_dy,_m, W, tW) 
+	mouseup		idW	 ( W , tW ) =	upW	 (_v,_dx,_dy,_m, W, tW , T)						
+	mousedrag	idZ	 ( Z,  tZ ) = dragZ	 (_v,_dx,_dy,_m, Z, tZ,uB)
+	mouseup		idZ	 ( Z,  tZ ) =	upZ	 (_v,_dx,_dy,_m, Z, tZ, T, uB)
+	mousedrag	idZ0  (tZ0)		= dragZ0 (_v,_dx,tZ0)
+	mouseup		idZ0   tZ0		=	upZ0 (_v,_dx,_m,tZ0,T,tMax) 
+    
+    mousedrag   idtMax (tMax)   = _m? dialogX( tMax , T,1e-3, str = 'tMax = ') : tMax    
+
+    mousescroll (fontSize,nic, KW, KA, kyB, kyR,yB0, yR0, tp, tk, PWW, NTol,tol,wk ) = paramUp(_v,_key,_dy,_m,_id)
+    
+    mouseover   (_msg,_cursor, tk)      = overCzasowe(_v,_x,_m,_x1,_y1,_id)
+     
+beginsubmenu "Czestotliwosciowe.." 
+	figure "Charakterystyki amplitudowe"
+        draw drawBodeNew(w,Ujw,Yjw,SD,Ts,K,T,pgB,pgR, SkU,NL,NU,NY,PWW,ZoS,fHz,wp,wk,KW,KA,typB,0)
+        mousedrag           (KA,wk) = upBode(_v,_m,id)	
+		mousescroll         (wk)    = scrollBode(_v,_dy,_m,_id)
+	mouseover (_msg,_cursor,wk,id)	= overBode(_v,_x,_m,_x1,_y1,_id)
+	figure "Charakterystyki fazowe"
+        draw drawBodeNew(w,Ujw,Yjw,SD,Ts,K,T,pgB,pgR, SkU,NL,NU,NY,PWW,ZoS,fHz,wp,wk,KW,KA,typB,3)
+		mousedrag	(KA,wk)	= upBode(_v,_m,id)
+		mousescroll (wk)	= scrollBode(_v,_dy,_m,_id)        
+	mouseover (_msg,_cursor,wk,id)	= overBode(_v,_x,_m,_x1,_y1,_id)	  
+	figure "Charakterystyki Nyquista"	
+        draw drawBodeNew(w,Ujw,Yjw,SD,Ts,K,T,pgB,pgR, SkU,NL,NU,NY,PWW,ZoS,fHz,wp,wk,KW,KA,typB,6)
+		mousedrag	(KA,wk)	= upBode(_v,_m,id)
+		mousescroll (wk)	= scrollBode(_v,_dy,_m,_id)        
+	mouseover (_cursor,_msg,ixF,wk,id) =	overNyquist(_v,_ix,_id,_m)
+	figure "char. Nyquista otwartej petli"
+        draw                                drawNyquistOLnew(_v)
+		mousedrag				(KA,wk)	=   upNyquistOL(_v,_m,_id)        
+		mousescroll             (wk)    =   scrollBode(_v,_dy,_m,_id)   
+	mouseover (_cursor,_msg,ixF,wk,id)  =	overNyquistOL(_v,_ix,_id,_m)        
+endsubmenu	
+
+functions //##################################
+{@
+use lti, stdlib 
+//dialogi i inne pomocnicze ###############################################
+function v = test(vv)
+  v=vv;
+    clc
+    disp(v.K);
+endfunction    
+function (fs,B,I)  = setfigstyle(fontSize,bold=false,italic=false,winbg=[])
+   B=bold;
+   I=italic;
+   fs = fontSize;
+  font = 'Segoe UI';%'Tahoma';%'Segoe UI';%'Cambria';%;%'Verdana';%
+  figurestyle('figfont',    Font=font,    Size=fs , Bold=B, Italic=I);
+  figurestyle('titlefont',  Font=font,    Size=fs,  Bold=B, Italic=I);
+  figurestyle('labelfont',  Font=font,    Size=round(fs*0.999),  Bold=B, Italic=I);
+  figurestyle('legendfont', Font=font,    Size=fs,  Bold=B, Italic=I);
+  figurestyle('tickfont' ,  Font=font,    Size=round(fs*0.899))
+  figurestyle('xygrid' ,    LineStyle='_' )
+  figurestyle('draw',       LineStyle='_')
+  figurestyle('plotmargin', Top=1.2 , Bottom=1.2, Left=5)
+  if ~isempty(winbg)
+    figurestyle('winbg', FillColor=winbg) // białe tło
+  end  
+    endfunction  
+  endfunction //dlazakończenie zwijania po figure
+  endfunction //dlazakończenie zwijania po figure
+  endfunction
+  endfunction
+  endfunction
+  endfunction
+  endfunction
+  endfunction
+endfunction
+function (fontSize,tMax, KW, KA, kyB, kyR,yB0, yR0, tp, tk, PWW, NTol,tol,wk ) = paramUp(v,key,dy,m,id)
+    fontSize = v.fontSize; tMax=v.tMax; KW=v.KW; KA=v.KA; kyB=v.kyB;kyR=v.kyR; yB0=v.yB0;yR0=v.yR0;wk=v.wk;
+    tp=v.tp;tk=v.tk;PWW=v.PWW;NTol=v.NTol;tol=v.tol;
+    k=1; df=0;
+    K=1.005;
+    if (key==='up')      ; k=K;     df =  1; end
+    if (key==='right')   ; k=K^5;   df =  5; end              
+    if (key==='left')    ; k=K^-5;  df = -5; end       
+    if (key==='down')    ; k=1/K;   df = -1; end
+    if isempty(id) ; id=0; end
+    
+    if (key=='>')        ; fontSize = setfigstyle(fontSize+1,v.B,v.I); end
+    if (key=='.')        ; fontSize = setfigstyle(fontSize+1,v.B,v.I); end 
+    if (key=='<')        ; fontSize = setfigstyle(fontSize-1,v.B,v.I); end    
+    if (key==',')        ; fontSize = setfigstyle(fontSize-1,v.B,v.I); end  
+    
+     PREC=false;
+dy=dy-df*1.00;
+
+
+    switch id
+        case idKA
+        if v.KW;
+            PWW = min(2,max(-3, v.PWW-dy));
+            NTol = true;
+            KA = 0; KW = 1;
+            switch PWW
+               // case 2 ;	tp=tk; 
+               // case 1 ;	tp=0;
+               // case 0 ;    KW=0; tp=0;
+                case -1;	NTol=false;
+            end
+        end 
+        case [idFreq,idYW,398]
+            if ~KA; wk = wk*k; end
+        case [idTime,idYT,idUT]
+            if ~KA; tk = min(max(0,tk-(PREC? 2e-5:0.0005)*tMax*dy),tMax); end
+            //if  ~KA ; tk = min(tMax,max(0,v.tk + 0.1*tMax*(k-1))); end
+        case idRedMark
+          if m  
+            yR0 = yR0 + (~v.NU ? 0.01*dy : 0);
+          else
+            kyR = kyR* (~v.NU ? (1+0.01*dy) : 0);
+          end
+        case idBlueMark
+          if m
+            yB0 = yB0 + (~v.NY ? 0.01*dy : 0);
+          else
+            kyB = kyB*(~v.NY ? (1+0.01*dy) : 1);    
+           // yB0 = yB0 + (~v.NY ? 0.1*dy : 0);
+          end
+        case idtMax
+        //disp(sprintf('%k',dy))
+            tMax = v.tMax*(1 - 0.005*dy);
+        case idTolT
+            tol =	scrollY(dy,tol,10,0);            
+        otherwise    
+    end   
+endfunction
+function styl = styl_B
+  styl = plotset(Color='blue',LineWidth=1+1.5*k12);
+endfunction
+function styl = styl_R
+  styl = plotset(Color='red',LineWidth=0.5+k12/2);
+endfunction
+function styl = stylC
+  styl = plotset(Marker='o',Size=36);
+endfunction
+function styl = stylO
+  styl = plotset(Marker='o',Size=20);
+endfunction  
+function kursor(KA,x0,x,y0,y,Color='Blue',id=[])
+
+U = Color(1)==upper(Color(1));
+
+stylX = plotset( Marker= 'x', Size = U? 13:11, Color = Color, LineWidth = U? 2 : 1);
+stylW = plotset( Marker= 'x', Size = U? 17:14, Color = 'white',LineWidth = U? 6: 3);
+stylL = plotset( LineStyle = KA ? '-' : ':', Color = Color);        
+  
+    plot( [1, 1]*x  ,  [y0,y]   , plotset(stylL));//,LineStyle=':') );
+    if (y0==y)&(~isempty(id))
+      //line([1,0], x , plotset(stylL,Color='black'));
+    end  
+    plot( [x0 ,x]   ,  [1,1]*y  , plotset(stylL));//,LineStyle=':') );//poziomy
+    plot( x, y, stylW) //iks    
+    plot( x, y, stylX) //iks
+    if ~isempty(id)
+      plot( x,y, Marker='o' ,Size=4, MarkerEdgeColor=Color, MarkerFaceColor='white' , LineWidth=1 , id=id )
+    end
+ 
+    
+endfunction
+function (x,typ1,typ2,typ3)     =	dialogX (x0, xB=1 , xMin=-inf, xMax=inf, str='Wartość parametru = %7s')
+	// opt = dialogset('Title',[str,sprintf('%n',x0*xB)],'NPrec',3,...
+				// 'Prompt',' (Cancel - gdy nie chcesz niczego zmieniac)');
+	opt = dialogset('SingleLine',true,'Title',spf([str],x0*xB,5),'NPrec',5,'Prompt',...
+    'Wpisz i zatwierdź nową wartość parametru\n [ OK ]  zatwierdza zmiany     [ Cancel ]  unieważnia wpis');
+	(Ok,x1) = dialog(opt,x0*xB);
+	if (~Ok) ; cancel ; end
+	if((x1<xMin*xB)|(x1>xMax*xB)); 
+		x1k=min(xMax*xB-10*eps,max(xMin*xB,x1));
+		dialog(['Wartość ',sprintf('%n  skorygowano na  %n',x1,x1k)]);
+        x1=x1k;
+	end
+	x=x1/xB;typ1=0; typ2=0; typ3=0;
+    
+endfunction
+function (x,typ1,typ2,typ3)     =	dialogX1 (x0, xMin=-inf, xMax=inf, str='Wartość parametru = ')
+	opt = dialogset('SingleLine',true,'Title',[str,sprintf('%k   ',x0)],'NPrec',3,'Prompt',...
+    'Wpisz i zatwierdź nową wartość parametru\n [ OK ]  zatwierdza zmiany     [ Cancel ]  unieważnia wpis');
+	(Ok,x1) = dialog(opt,x0);
+	if (~Ok)|~isreal(x1+eps) ; cancel ; end
+	if((x1<xMin)|(x1>xMax)); 
+		x1=min(xMax-10*eps,max(xMin,x1));
+		dialog(['Skorygowana wartość =',sprintf('%k',x1)]);
+	end
+	x=x1;typ1=0; typ2=0; typ3=0;
+endfunction
+function (x,nx)				    =	dialogP(x0, xB=1  , xMin=-inf, xMax=inf,str='indeks = ')
+	opt = dialogset('Title',[str,sprintf(' %n  ',x0*xB)],'NPrec',3,...
+				'Prompt',' [Cancel] - anuluj , [OK] - zatwierdz zmiany');
+	(Ok,x1) = dialog(opt,x0*xB);
+	//if (~Ok) ; x1=x0*xB ; end
+    if (~Ok) ; cancel ; end
+    
+	if((x1<xMin*xB)|(x1>xMax*xB)); 
+		x1=min(xMax*xB-10*eps,max(xMin*xB,x1));
+		dialog(['Skorygowana wartość =',sprintf('%n',x1)]);
+	end
+
+ 	x=x1(1)/xB;
+    nx = length(x1)>1? x1(2) : -x1(1);
+    nx = nx/xB;
+    
+endfunction
+function (n,typ0)				=	dialogNr(n0, nMin=1, nMax=2,str='n = ')
+	opt = dialogset('Title',[str,sprintf(' %d  ',n0)],'NPrec',1,...
+				'Prompt',[sprintf('Podaj liczbe od %d do %d ',nMin,nMax),'\n [Cancel] - anuluj , [OK] - zatwierdz zmiany']);
+	(Ok,x1) = dialog(opt,n0);
+    if (~Ok) ; cancel ; end
+    n1 = round(x1);
+	if((n1<nMin)|(n1>nMax)); 
+		n1=min(nMax,max(nMin,n1));
+		dialog(['Skorygowana wartość = ',sprintf('%d',n1)]);
+	end
+ 	n=n1;
+    typ0 = 0;
+endfunction
+function (h,Ts)			=	dialog_h(h,T) //tymczasowo ? h==h
+	x=dialogX(h,T,0.001,1);
+    xk = 1/round(1/x);
+    if xk ~= x;
+        dialog(sprintf('Wartość skorygowana: h = %gs' , xk*T))
+    end
+	(h,Ts)=deal(xk);
+endfunction
+function (Kp )                  =   dialogEH(Kp, uMax)
+    EH = uMax/Kp ; 
+    x  = dialogP(EH, 1 , 1e-32 , 1e12 , 'Uchyb przy przelaczaniu z uMin na uMax: eH = ');
+    Kp = uMax/x;
+
+endfunction 
+function (L,M)				    =	skalujLM(L,M,T)
+	n	=	length(M);
+	for i = 1:n ; M(i)=M(i)*T^(n-i); end;
+	n	=	length(L);
+	for i = 1:n ; L(i)=L(i)*T^(n-i); end;
+endfunction
+function (LO,MO)			    =	dialogLMO(L0,M0,T)//to jeszcze nie gotowe!
+	(L,M)	= skalujLM(L0,M0,T);
+	LO	=	L0;
+	MO	=	M0;
+	opt = dialogset('Title',...
+			['[bᵣ..b₀]=[',sprintf(' %k ',L),'] , M=[',sprintf(' %k ',M),']'],...
+			'NPrec',3,...
+			'Prompt',['Podaj wspolczynniki licznika i mianownika transmitancji',...
+			'\nw kolejnosci od najwyzszej potegi s',...
+			'\n(Cancel - gdy nie chcesz niczego zmieniac)']);
+	(ok,L,M) = dialog(opt,L,M);
+	if ~ok ; return; end;
+		
+	if length(L)>length(M)
+		dialog('Licznik nie moze byc wyzszego stopnia niz mianownik');
+		return;
+	end
+	if L(end)~=M(end)
+		dialog('Wzmocnienie statyczne tego bloku musi byc rowne 1');
+		return;
+	end
+	Tn=(length(M)<2?0:M(end-1))-(length(L)<2?0:L(end-1));
+	if abs(T-Tn/M(end))>0.5;
+		dialog('UWAGA: opoznienie znacznie rozni sie od T!');
+	end 
+	(LO,MO)=skalujLM(L,M,1/T);
+endfunction
+function (LO)			        =	dialogLO(L0,T,str='[ bᵣ .. b₀ ] = ')//to jeszcze nie gotowe!
+	L	= skalujLM(L0,L0,T);
+	LO	=	L0;
+	//MO	=	M0;
+	opt = dialogset('Title' , [str,'[', sprintf('   %k',L),'  ]'],...
+			'NPrec',3,...
+			'Prompt',['Podaj współczynniki transmitancji',...
+			'\nw kolejnosci od najwyższej potegi s',...
+			'\n(Cancel - gdy nie chcesz niczego zmieniać)']);
+	(ok,L) = dialog(opt,L);
+	if ~ok ; return; end;
+	LO=skalujLM(L,L,1/T);
+endfunction
+function (W,tW,AW,typB)			=	dialogW(W,tW,T,AW=0,typB=1,m=0)
+if m     
+    opt = dialogset('Title',['[ dw , dt	] = ',sprintf('%n , %n',W,tW*T)],'NPrec',3,...
+				'Prompt',' Wpisz nowe wartosci dw , dt	\n\n [Cancel] - anuluj , [OK] - zatwierdz zmiany');
+	(Ok,WtWn) = dialog(opt,[ W , tW*T ]);
+	if (~Ok) ; cancel ; end
+    W = WtWn(1);
+    tWn=length(WtWn)>1?WtWn(2):tW*T;
+	if(tWn<0); tWn=0;
+	    dialog(['Skorygowana wartość dt=',sprintf('%n',tWn)]);
+	end
+	tW=tWn/T;
+    (AW,typB) = deal(1);
+else
+   AW = ~AW; if AW; typB=1; end ;
+end   
+endfunction
+function (ORA,typReg,Awup)      =   negacjaORA(ORA,typReg,Awup)
+    //ORA = ~ORA | ~typReg;
+    ORA = ~ORA;
+    typReg=max(~ORA,typReg);
+    if ~ORA; Awup=0; end
+//[ORA,Awup]
+endfunction 
+function (LN)					=	negacjaLN(LN,AN)
+	if (AN==true)
+		idlestate(~LN);
+		LN	=	~LN;
+	else
+		idlestate(false);
+		LN	=	false;
+	end 
+endfunction 
+function (AZ,NZ,typB,Z,tZ,tZ0)	=	drupZ	( AZ,NZ, Z,tZ,tZ0,tMax,T,uB,AW,PWS, dz)
+	if (abs(dz)>1.5)
+		NZ=AZ; 
+		typB= ~AZ? 2 : AW? 1 : 0;
+		AZ = ~AZ;
+	else
+		// Title = AW?['[ dz , dt , t0 ] = ',sprintf('%n , %n , %n',Z*uB,tZ*T,tZ0*T)]:['[ dz , dt ] = ',sprintf('%n , %n ',Z*uB,tZ*T)]; 
+		// opt = dialogset('Title',Title,'NPrec',3,...
+				// 'Prompt',[' Wpisz nowe wartosci dz , dt ',AW?' , t0':'',' \n\n [Cancel] - anuluj , [OK] - zatwierdz zmiany']);
+        Z  = dialogX(Z,uB,str='Zmiana zakłócenia, ΔZ = %6s' );
+        tZ = dialogX(tZ,T,0,tMax,str='Czas trwania zmiany Δt = %6ss' );
+        if AW==1
+            tZ0 = dialogX(tZ0,T,0,tMax-1e-4,'Chwila początkowa zmiany tZ0 = %6ss');
+        end    
+			// (Ok,ZtZt0) = dialog(opt,[Z*uB,tZ*T,tZ0*T]);
+            // if (~Ok) ; cancel ; end
+            // Zn = ZtZt0(1);
+            // tZn= length(ZtZt0)>1? ZtZt0(2) : tZ*T;
+            // tZ0n=length(ZtZt0)>2? ZtZt0(3) : tZ0*T;
+			// tZ0=min(tZ0n/T,tMax-1e-4);
+		// else
+			// (Ok,ZtZ) = dialog(opt,[Z*uB,tZ*T]);
+            // if (~Ok) ; cancel ; end
+            // Zn = ZtZ(1);
+            // tZn= length(ZtZ)>1? ZtZ(2) : tZ*T;  
+		// end		
+		// if (~Ok) ; cancel ; end
+		// if(tZn<0); tZn=0;
+		// dialog(['Skorygowana wartość dt=',sprintf('%n',tZn)]);
+		// end
+		// tZ=tZn/T;
+		// Z = Zn/uB;
+	  typB=AZ? 1 : 2;
+	  AZ=1; NZ=0;
+	end
+endfunction
+function (AN,LN,typB,UN,nSigma) =	drupN	( AW, AN,UN,nSigma,PWS, dz)
+	if (abs(dz)>1.5)
+		AN=~AN;
+	else 
+		idlestate(false);
+			str=['rozklad ',UN?'rownomierny(1)':'normalny(0)'];
+			opt = dialogset('Title',['[ sigma , rp ] =	 ',sprintf('%g	,  %s', nSigma , str )],'NPrec',3,...
+				'Prompt',...
+	' Okresl odchylenie standardowe sigma \n oraz rozklad prawdopodobienstwa: 0 (normalny), 1:rownomierny\n [Cancel] - anuluj , [OK] - zatwierdz zmiany');
+			(Ok, rozkladSigma) = dialog(opt, [nSigma,UN]);
+			if (~Ok) ; cancel ; end
+            nSigma = rozkladSigma(1);
+            UN = length(rozkladSigma)>1? rozkladSigma(2):UN;
+			if(nSigma<0); nSigma=0;
+				dialog(['Skorygowana wartość odchylenia std =',sprintf('%g',nSigma)]);
+			end
+			//UN = (upper(rozklad(1))=='R')?1:0;
+			AN = true;
+	end 
+	LN=false;
+	if AN
+		typB= 3;
+	else
+		typB=AW? 1 : 2;
+	end 
+endfunction
+function (typ,typN)				=	zmienTyp(typX,typMin,typMax,m=false)
+	typ	 = typMin+mod(typX-typMin+(m?-1:1) , typMax-typMin+1);
+	typN=0;
+endfunction
+function (y , typ0)				=	scrollY( dy , y , dyB=1, Ymin=-1/eps , Ymax=1/eps , typ=0)
+	if dyB ~= 0
+		kB = dyB;
+	else	
+		 ay=abs(y);
+         r = floor(log10(ay));
+         ay = ay/10^r;
+         
+		 if ay<0.5;		kB=500; 
+         elseif ay<1;   kB=200;
+		 elseif ay<2;	kB=100;
+		 elseif ay<5;	kB=50;
+		 elseif ay<10;	kB=20;
+		 elseif ay<20;	kB=10;
+		 elseif ay<50;	kB=5;	
+		 else;	kB = 1; 
+		 end
+         kB=kB/10^r;
+	end	 
+	y	= min(Ymax,max(Ymin,round(kB*y-dy)/kB ));
+	//y = min(Ymax, max(Ymin, y-dy/dyB ));
+	typ0 = typ;
+endfunction
+function		method			=	mdStr(MD)
+		mdStr = 'tzfm';
+		method = mdStr(MD);
+endfunction 
+function		dd_sys			=	ddelay(d,Ts)
+q = tf(1,[1,0],Ts);
+if d==0
+	dd_sys = 1;
+else	
+	q = tf(1,[1,0],Ts);
+	n = floor(d/Ts);
+	m = rem(d/Ts , 1 );
+	if n<32
+		dd_sys =((1-m)*q^n+m*q^(n+1));
+	else
+	  n=n-31;
+	  dd_sys =((1-m)*q^n+m*q^(n+1));
+	  dd_sys = dd_sys*q^31;
+	end
+end
+endfunction 
+function (Mx,typN)				=	zapiszNastawy(typReg,typN,Kp,Ti,b,c,Td,Nd,T,K,p,typP,typO=2,nO=5,nM=0)
+	typN=-nM;
+	Mx = {typReg,typN,Kp,Ti,b,c,Td,Nd,T,K,p,typP,typO,nO};
+endfunction
+function (typReg,typN,Kp,Ti,b,c,Td,Nd)	=	wczytajNastawy(Mx,T,K,nM=0)
+	Mcell=Mx;
+	(typReg,typN,Kp,Ti,b,c,Td,Nd,To,Ko) = deal(Mcell{:}) ;
+	if (K~=Ko)|(T~=To) ; 
+		Kp=min(10*Kp	, Kp*K*T/Ko/To); 
+		Ti=max(0.1*Ti	, Ti*To/T); 
+		Td=min(10*Td	, Td*To/T);
+	end;
+	typN=-nM; 
+endfunction
+function (Kp,Ti,Td,typN,typReg,wzor)    =	autoNastawy(Kp,Ti,Td,typN0,typReg,typP, p, SD, Ts    ) 
+ //if typN0<1; cancel; end
+ 
+wzor='nastawy swobodne';
+ typN = typN0;
+ 
+  c = SD? 1+Ts : 1;
+ 
+ switch typReg
+	case 1 %P
+		switch typN0
+			case 2;		Kp=0.785/c; wzor='ZN :    Kp = 0.785/K/T῎'; %ZN freq.: 0.5*Ku=pi/4
+			case 1;		Kp=0.6/c; wzor='CHR:    Kp = 0.6/K/T῎';%CHR 0% (było 0.3?!)
+			case 6;		typN=0; %sym
+			case 5;		Kp=0.5/c;	wzor='mod:  Kp = 0.5/K/T῎';  % mod
+			case 3;		Kp=0.7/c;	wzor='CHR2: Kp = 0.7/K/T῎';  %CHR 20%
+			case 4;		Kp=1/c;	wzor='ZNs:  Kp = 1/K/T῎';  % ZN step 
+		end			
+	case [2,3,4] %PI,IP,PI+
+		switch typN0
+			case 2;		Kp=0.628/c; Ti=3.2/c; wzor='ZN:     Kp = 0.628/K/T῎    Ti = 3.2·T῎'; %ZNfreq 0.4Ku,0.8Tu
+			
+            case 1;		Kp=0.6/c;	  Ti=typP<2?  4*c:  4*c/(1-2.5*p*c); %4/(1-1.0*p)^2;
+                        wzor= 'CHR:    Kp = 0.6/K/T῎    Ti = 4·T῎' ;%4+6*p+3*p^2;%
+                        if typP>=2; wzor=['CHR+:',wzor(6:end),'/(1-2.5pT῎)']; end         
+			
+            case 6;		Kp=0.5/c;	  Ti=4.0*c;	wzor= 'sym:     Kp = 0.5/K/T῎    Ti = 4·T῎' ;
+			case 5;		Kp=0.5/c;	  Ti=typP==1? 1e4 : -1/p; %mod Ti=inf
+                        wzor= 'mod:     Kp = 0.5/K/T῎    Ti = ' ;
+                        wzor=[wzor,typP==1?'∞':'-1/p/T῎'];    
+			case 3;		Kp=0.7/c;	  Ti=2.3*c;  wzor = 'CHR2:    Kp = 0.7/K/T῎    Ti = 2.3·T῎' ; %CHR 20%
+			case 4;		Kp=0.9/c;	  Ti=3*c;    wzor = 'ZNs:     Kp = 0.9/K/T῎    Ti = 3·T῎' ;%ZN step
+		end 
+	case 5 %PID
+		switch typN0
+			case 2;		Kp=0.943/c;Ti=2.0*c; Td=0.5*c; wzor= 'ZN:     Kp = 0.943/K/T῎    Ti = 2·T῎   Td = 0.5·T῎';%ZNfreq 0.6Ku 0.5Tu 0.125Tu
+			case 1;		Kp=1/c;Ti=3*c;Td=0.3*c;wzor= 'CHR:    Kp = 1/K/T῎    Ti = 3·T῎   Td = 0.3·T῎';%Kp=0.95; Ti=2.4; Td=0.42;%CHR 0῎
+                        if typP>=2; Ti=Ti/(1-1.5*p*c); 
+						wzor= 'CHR+:  Kp = 1/K/T῎  Ti = 3·T῎/(1-1.5pT)  Td = 0.3·T῎';
+						end
+			case 6;		typN=0;
+			case 5;		typN=0;
+			case 3;		Kp=1.2/c;	 Ti=2.0*c; Td=0.42*c; wzor= 'CHR2:  Kp = 1.2/K/T῎    Ti = 2·T῎   Td = 0.42·T῎';%CHR 20%
+			case 4;		Kp=1.2/c;	 Ti=2.0*c; Td=0.5*c;  wzor= 'ZNs:   Kp = 1.2/K/Tv    Ti = 2·T῎   Td = 0.5·T῎'; %ZNstep		end 
+		end 
+ end
+endfunction
+function (t,u,y,w,Ujw,Yjw,wL,Ljw)		=	empty_tuy
+ t=[];u=[];y=[]; w=[]; Ujw=[] ; Yjw = [] ; wL=[]; Ljw=[]; 
+endfunction
+
+//// layout, init, export ################################
+function layout(nr)
+
+switch nr
+	case 1
+		subplots('Odpowiedzi czasowe');
+	case 2
+		subplots('Schemat blokowy\tOdpowiedzi czasowe')
+    case 3    
+_plots = '\nSchemat blokowy\nCharakterystyki amplitudowe\nOdpowiedzi czasowe';
+_plotprops = [360448,zeros(1,4)
+884736,zeros(1,4)
+262145,zeros(1,4)
+262144,zeros(1,4)];
+_plot3d = [];
+_plotsync = [];
+_plotpos = [68.9375,137.875,42.5625,85.125
+0,68.9375,0,42.5625
+68.9375,137.875,0,42.5625
+0,138,43,85.125];
+_plotspring = [0.5*ones(1,6)
+0.5*ones(1,6)
+0.5*ones(1,6)
+0.5*ones(1,6)];
+_plotsize = [137.875,85.125];
+subplots(_plots);
+subplotprops(_plotprops);
+subplotpos(_plotpos);
+subplotspring(_plotspring);
+subplotsize(_plotsize);
+        
+	case 4
+		subplots(['Schemat blokowy\tOdpowiedzi czasowe\nchar. Nyquista otwartej petli\tCharakterystyki amplitudowe']);
+	case 6
+		subplots(['Schemat blokowy\tOdpowiedzi czasowe\tCharakterystyki amplitudowe',...
+			 '\nchar. Nyquista otwartej petli\tCharakterystyki Nyquista\tCharakterystyki fazowe'])
+	otherwise		 
+		subplots(['Schemat blokowy\tOdpowiedzi czasowe',...
+				  '\nCharakterystyki Nyquista\tCharakterystyki amplitudowe']);
+end				  
+endfunction
+function (NM,NG)        = init(v)
+  global NM
+  global NG
+  NM = false;
+  NG = true;
+  B = false;
+  I = false;
+  winbg=0.5;
+  setfigstyle(v.fontSize,bold=B,italic=I , winbg=v.winbg);
+  //subplots('Schemat blokowy');//layout(1) //layout(6)
+  layout(2);
+  idlestate(false);
+  
+endfunction
+function NM             = ustawMargin(NM)
+global NM
+
+sp=subplots;
+spp=subplotprops;
+sps=subplotpos;
+NM=not(NM);
+subplots(sp);
+subplotprops(spp);
+subplotpos(sps);
+
+endfunction
+function NG             = ustawGrid(NG)
+global NG
+
+sp=subplots;
+spp=subplotprops;
+sps=subplotpos;
+NG=not(NG);
+subplots(sp);
+subplotprops(spp);
+subplotpos(sps);
+
+endfunction
+function (seed)         = liveNoise(LN,seed)  
+if (LN==true)
+	//idlerate=0.05;
+	seed=seed+pi;
+else
+	seed=seed;
+end 
+	//seed = LN? seed+pi : seed;
+endfunction
+function (wMin,wMax,h,Ts,tMax,AW,W,tW,AZ,Z,tZ0,tZ,pgB,pgR,NU,NY,NW,NZ,AN,UN,nSigma,LN,seed)  =	paramSym
+// parametry symulacji i skoku zakłócenia - w jednostkach bazowych
+ wMin   = 0.001; //min. pulsacja  (JB)
+ wMax   = 100;   // max. pulsacja (JB)
+ h		=   0.05;//0.05; //0.02;
+ //h  =   h; // zmiana 11-05-2020
+ Ts     =   h ; // zmiana 11-05-2020
+ tMax	=   60;//60;//100; //10; //60;	  %	 czas końcowy symulacji
+ Z		=	0.5;//0.5;		% skok zakłócenia na wejściu obiektu
+ tZ0	=	tMax/2;		% początek zakłócenia
+ tZ		=	h;//h/2;					//czas narastania zaklocenia z(t)
+ W		=	1;//1
+ tW		=	h;//0;//h/2;	//czas narastania wymuszenia
+ pgB	=	2; //1; %y
+ pgR	=	1;	%u
+ (NY,NU,NW,NZ) = deal(0,1,1,1);	 // NZ=1; NU=1;
+ (AW,AZ)	= deal(1,1);	     // AW =0;
+ (AN,UN,LN) = deal(0);
+ nSigma		= 0.02;
+ seed		= rand;
+endfunction
+function (M1,M2,M3)	    = initMem
+		 (M1,M2,M3) =	deal({2,1,1,10,0.0,0.0,0.5,8,1,1,-0.1,1,2,5 }); //typReg,typN,Kp,Ti,b,c,Td,Nd,T,K,p,typP,typO,nO
+endfunction
+function (dane,type)    = eksportParam(h,Ts,SD,MD,K,T,p,Kp,Ti,b,Td,Nd,c,typReg,typO,typP,typH,H2O,nO)
+ dane=[h,Ts,SD,MD,K,T,p,Kp,Ti,b,Td,Nd,c,typReg,typO,typP,typH,H2O,nO];
+ type='real array';
+endfunction
+function (h,Ts,SD,MD,K,T,p,Kp,Ti,b,Td,Nd,c,typReg,typO,typP,typH,H2O,nO) = importParam( d, typ )
+ h=d(1);Ts=d(2);SD=d(3);MD=d(4);K=d(5);T=d(6);p=d(7);Kp=d(8);Ti=d(9);b=d(10);
+ Td=d(11);Nd=d(12);c=d(13);typReg=d(14);typO=d(15);typP=d(16);typH=d(17);H2O=d(18);nO=d(19);
+endfunction
+
+
+//// make ##################################################################################
+function (wB,yB,uB,kB)		    =	makeBazowe	( K , T , W=1 )
+	wB	=	1/T;
+	yB	=	abs(W) ; % deklaracja jest bez 3-go parametru - i chyba lepiej;
+	uB	=	yB/K/T;
+	kB	=	1/K/T;
+endfunction
+function (sOL,Fs,Cs,Os,Ps,Hs,d) =	makeSys(b2,b1,a2,a1,h,Ts,SD,MD,p,Kp,Ti,b,c,Td,Nd,uMax,typReg,typO,typP,typH,H2O,LO,MO,nO,Awup,T)
+//	make (FFd,Cd,Fs,Cs,Os,Ps,Hs,d)	=	makeSysOtw(Ts,SD,MD,p,Kp,Ti,b,c,Td,Nd,typReg,typO,typP,typH,H2O,LO,MO,nO)
+//
+ s	=	tf([1,0],1);  
+ if ~SD ; Ts=h; end
+
+ switch typReg
+	case 1	;	Cs	=	tf(Kp,1);		Fs	=	tf(1,1);
+	case 2	;	Cs	=	Kp*(1+1/s/Ti);	Fs	=	tf(1,1);				
+	case 3	;	Cs	=	Kp*(1+1/s/Ti);	Fs	=	1/(1+s*Ti);				
+	case 4	;	Cs	=	Kp*(1+1/s/Ti);	Fs	=	(1+b*s*Ti)/(1+s*Ti);	
+	case 5	;	Cs	=  Kp*(1 + 1/s/Ti +	  s*Td/(1+s*Td/Nd)) ;			
+				Fs	= minreal(Kp*(b + 1/s/Ti + c*s*Td/(1+s*Td/Nd))/Cs); 
+	otherwise;	Cs	=	tf(Kp,1);		Fs	=	tf(1,1);				
+ end
+ switch typO
+ //UWAGA: próbna zmiana O1 na pojedyncze zero- ciekawe ale niemożliwe dla PID
+	case 1	;	d=0 ;	Os	=	tf(1,1);
+	//case 1	;	d=0 ;	Os	=	tf([-1,1],[1e-2,1]);
+//------------------------------------------------	
+	case 2	;	d=1 ;	Os	=	tf(1,1); 
+	case 3	;	d=0 ;	Os	=	tf([1,-6,12],[1,6,12]); % Pade2
+	
+	
+	case 4	;	d=0 ;	%Os =	tf([-1,2],[1,2]); %Pade1 
+	// zamiast Pade1 : pade2(T/2)*Bessel2(T/2)	(wyższe rzędy mogą dać niestabilne rozwiązania)
+				numop=[12 , -144 ,	576];
+				denop=[ 1	 18	  132	432	  576];
+				Os =  tf(numop,denop)	;
+	
+	case 5	;	d=0.5;	Os	=	tf(1,[0.5 1]);
+	case 6	;	d=0 ;	Os	=	1/(1+s/nO)^nO;// minreal(1/(1+s/nO)^nO);
+    case 7  ;   d=0 ;   Os  =   tf([b1,1],[a1,1]);
+        if ~a1&b1 ; 
+           dialog('Stopień wielomianu w liczniku nie może być wyższy niż w mianowniku'); 
+        end
+    case 8  ;   d=0 ;   Os  =   tf([b2,b1,1],[a2,a1,1]); 
+        if ~a2&b2|~a2&~a1&b1
+           dialog('Stopień wielomianu w liczniku nie może być wyższy niż w mianowniku'); 
+        end
+	case 9	;	d=0 ;	Os	=	tf( LO , MO );
+        if length(LO)>length(MO)
+           dialog('Stopień wielomianu w liczniku nie może być wyższy niż w mianowniku'); 
+        end
+	otherwise;	d=0 ;	Os	=	tf(1,1);
+ end
+ switch typP
+	case 1	;	Ps	=	tf( 1 , [1 , 0 ]); %K/s;  
+	case 2	;	Ps	=	tf( 1 , [1 , -p]);
+//### !!!! 	
+	otherwise;	Ps	=	tf(T,[1,-p,0]);
+//##### !!!!	
+	
+ end
+switch typH
+	case 1	;	Hs	=	tf(1e-12,1);
+	case 2	;	Hs	=	tf(1,1);
+	otherwise;	Hs	=	tf(1,1);
+ end
+ if (H2O==1) ;	(Hs,Os) = deal(Os,Hs);	end;
+ 
+	 tol = 1e-12;//1e-9;
+//########	
+	
+// wszystko dyskretnie, porzucam całkowicie ciągłe	
+// na razie model ciągły spróbuję zrobić z modelem zoh obiektu
+// Ts=2/19, opóźnienie T' bloku O zmniejszone w proporcji T'=18/19.T
+// zamiast tego zostawiam tustina, ale ale przesuwam wykresy o Ts/2
+// dopuszczam tustina dla Cd, choć	daje oscylacje dla PID i Tf/Ts<0.5
+
+	TS=Ts;	
+	if SD==false ; Ts=h; end
+	
+	nd = floor(d/Ts);
+	m = rem(d/Ts,1);
+	Od= ss(0,1,m,1-m,Ts);
+
+	C=c2d(Cs,Ts,mdStr(MD)); F=c2d(Fs,Ts,mdStr(MD)); 
+	P=c2d(Ps,Ts,mdStr(MD));
+	O=c2d(Os,Ts,mdStr(MD)); H=c2d(Hs,Ts,mdStr(MD));
+	if (H2O==true)
+		 H=H*Od;
+	else
+		O=O*Od;
+	end
+	
+if (typReg>1) & Awup & (uMax<inf)
+	Diff= ss(0,1,-1,1,Ts); // przyrost zmiennej dv zamiast v 
+	C	= C*Diff;	
+end
+
+
+	// ------[____ W______	,_____	Z____ ,___ N__ ,_____U____]
+	// stf= [	0		,	-P*H		,	H	,	O*P*H	   //y
+			  // 0		,	-P		,	0	,	O*P		  //y"	
+			  // 0		,	0		,	0	,	O		  //u'
+			  // F*C	, P*H*C			,	H*C ,	-C*O*P*H ]; //v lub dv (wewnętrzne	regulatora)
+
+	 stW = [ tf(0,1,Ts) ;	0	;	0	;	F*C		];
+	 stZ = [ -P*H		;	-P	;	0	;  P*H*C	];
+	 stN = [  H			;	0	;	0	;	H*C		];
+	 stU = [ O*P*H		;	O*P ;	O	; -C*O*P*H	]; 
+
+	sTf = [stW , stZ ];
+	sTf = [sTf , stN ];
+	sTf = [sTf , stU ];
+//	sOL = minreal(ss(sTf),tol);
+sOL = minreal(ss(sTf),tol);
+
+
+endfunction
+function (t,u,y)                =   make_tuy(sOL,uMax,uMin,d,typReg,ORA,typO,AW,tW,W,AZ,tZ0,tZ,Z,AN,UN,nSigma,seed,tMax,pgB,pgR,h,Awup,SD)
+//
+
+tic
+
+    TS = sOL.Ts; 
+
+    nd =  floor(d/TS)+1;  // dodane +1;11-05-2020
+    h=h;             // zmiana 11-05-2020
+    h=TS; // na próbę 2020-05-16
+    dt=1e-6; //zmiana z 1e-6; //czy to w ogóle konieczne? TAK 
+
+//dt=TS; // na próbe, ale lepiej zdyskretyzować  czasy tW, tZ, ??? 2020-05-16
+
+	if (AW==false);		W=0;  tZ0=0; end
+	if (AZ==false);		Z=0;  end
+	tZ0 = max(0,min(tZ0,tMax));
+	if (tW>tMax);		W=W*tMax/tW ; tW=tMax; end
+	if (tZ>(tMax-tZ0)); Z=Z*(tMax-tZ0)/tZ; tZ=tMax-tZ0; end 
+	
+	tw	=	[ -3*TS ,		0	, tW+dt		,	tMax+3*TS	]; //-tMax/50,-100*eps
+	w	=	[	0	,		0	,  W		,	W			];
+	tz	=	[ -3*TS ,	tZ0	, tZ0+tZ+2*dt	,	tMax+3*TS	]; //-tMax/50, tZ0-100*eps
+	z	=	[	0	,		0	,  Z		    ,	Z			];	
+	twz =	unique([tw,tz]);
+	wz	=	[interp1(tw,w,twz)',interp1(tz,z,twz)'];%'%
+//######
+	td	= (0 :	h : tMax+h);	Ltd=length(td);
+//	tD	= (0 : TS : tMax);	LtD=length(tD);   2020-05-16 usuwam tD
+//LtD=Ltd;	
+	dwz	 = interp1(twz,wz,td);
+	
+	rand('seed',seed);randn('seed',seed);
+	if (AN==true)	//active noise
+		if (UN==true) //uniformely distr.noise
+		  n = nSigma*2*sqrt(3)*rand(size(td));
+		else
+		  n = nSigma*randn(size(td));
+		end
+		n=n-mean(n);
+	else
+		n = zeros(size(td));
+	end
+	U =zeros(size(td));        if typReg==0;    U(1:nd)=uMin; end //1:round(1/h)
+	dwzn = [dwz,n'];//'
+	dwznU = [dwz,n',U'];
+	dwznU = [dwznU	;  zeros(2*nd+20,4)]; % wektory 
+if SD
+   nd=nd+1;
+end
+    sys = augstate(sOL);
+    [A,B,C,D,Ts] = ssdata(sys);
+    nX = size(A)(1);
+    X0 = zeros(nX,1);
+    
+    Y  = zeros(Ltd,size(D)(1));  //if typReg==0; Y(1,3:4)=uMin; end //:round(1/h)
+    
+    if (typReg>1) & Awup & (ORA) //(typReg>1)&((nd>0)|(uMax<1e6))	 // dv zamiast v
+        v = 0;
+        for i = 1:Ltd-1
+        
+            y = dlsim(A,B,C,D,[dwznU(i:i+2,:)],Ts,X0);// bieżąca odpowiedź y,y",u',v
+            dv = y(3,4); // wyjście	 dv regulatora
+            v  = min(uMax,max(uMin,v+dv)); //wyjscie u po korekcji ( v=Lim(v+dv))
+
+            dwznU(nd+i:nd+i+2,4) = v; // zapis u opóźniony o nd+1
+            
+            y(3,4)	= v; 
+            Y(i+1,:)= y(3,:);		  // wyniki bieżące do y,y",u',u
+            X0		= y(3,5:end);	  // stan dla następnego kroku	   
+        end
+    else
+        for i = 1:Ltd-1
+            y = dlsim(A,B,C,D,[dwznU(i:i+2,:)],Ts,X0);// bieżąca odpowiedź y,y",u',v
+        //v = y(:,4); // wyjście v lub dv regulatora
+            v=y(3,4);
+//###### w tm miejscu histereza lub zwykłe ograniczenie!!
+            if typReg==0
+                us=dwznU(i,4);
+                v=v>uMax?uMax:v<-uMax?uMin:us;
+            elseif ORA     
+                v  = min(uMax,max(uMin,v)); //wyjscie u po korekcji dla P
+            end    
+//#############
+            dwznU(nd+i:nd+i+2,4) = v; // zapis u opóźniony o nd+1
+            
+            y(3,4)	= v;
+            Y(i+1,:)= y(3,:);			   // wyniki bieżące do y,y",u',u
+            X0		= y(3,5:end);		   // stan dla następnego kroku 
+        end
+    end 
+	ny = mod( pgB-1, 2)+1; 
+	if (pgR<2)//|(typO==1); //dodano |(typO==1) 11-05-2020 , usunięto 2-04-2024
+        nu=4; 
+    else
+        nu=3;
+    end
+	y = Y(:,ny)';%'%
+	u = Y(:,nu)';%'%
+      
+ if typReg==0; u=[u(2:end),u(end)];  end    
+
+	w = dwzn(:,1)';%'%
+	t = td;
+	z = dwzn(:,2)';%'%	
+	n = dwzn(:,3)';%'%
+    
+ if SD & pgR==3 ;   u = [0,u] ; u=u(1:end-1) ; end //2020-05-16
+ 
+	u = pgR==3?u-z:u;
+	y = pgB==3?w-y:y;
+
+	if(pgB==4); y=y+n; end ; //'s
+// y(2)=y(3)/2;   
+   // if (~SD)&(AW) ; t(2) = t(2)-h ; end // dodane 11-05-2020
+    
+  // t=t-h/2; //t(2)=0; //t(2)=h/2; 
+   // t(1)=0;
+   // t(2)=0; u(2)=0;
+ //  t=[tMax/50,t]; u=[0,u]; y=[0,y];
+   //t(2)=0; t(1)=-h/100;   
+
+if AW & W & ( (pgR ~= 3)|~SD )
+ if tW >= 2* h ;  
+    u(2)=(u(1)+u(3))/2;   
+ else
+   u(2)=(u(2)+u(3))/2;
+    u(1)=u(1); 
+ end
+end 
+    
+ if true;   y(2)=(y(1)+y(3))/2; end
+ 
+//toc
+endfunction
+function (w,Ujw,Yjw)            =   make_wUY(wMin,wMax,sOL,Fs,Cs,Os,Ps,Hs,d,T,K,H2O ,SD, pgB, pgR, typB)
+
+//
+	w   =   logspace(log10(wMin),log10(wMax),2000);
+    w   =   unique([w,logspace(log10(1/2),log10(4),2000)]);    
+	lw  =   length(w);
+//[w(1),w(end)]	
+//    typB=   typB + nB;      // nB : warianty Bodego
+    Ts  =   sOL.Ts;
+	mdStr = 'tzfm';
+MD=1; //tylko tustin    
+	F=nyquistZ(SD?c2d(Fs,Ts,mdStr(MD)):Fs,w);
+	C=nyquistZ(SD?c2d(Cs,Ts,mdStr(MD)):Cs,w);
+	P=nyquistZ(Ps,w);
+	O=nyquistZ(Os,w);
+	H=nyquistZ(Hs,w);
+	if (H2O==true);H=H.*exp(-j*w*d);else;O=O.*exp(-j*w*d);end
+	OL=C.*O.*P.*H;
+//#########  
+//SD  
+if SD; OL=OL.*exp(-j*w*Ts); end    
+//#########
+
+	S = 1./(OL+1);
+
+	switch typB
+	case [1 , 4 , 7] //wymuszeniowe ?/W
+		switch pgB	//pgB = 1:y		 2:y'		   3: e=w-y		 4:y"
+			case	1	;	Y	= F.*OL.*S;
+			case	3	;	Y	= S;
+			otherwise	;	Y	= F.*C.*O.*P.*S;
+		end
+		switch pgR // pgR = 1:u/Kp	 2:u'/Kp	   3:(u'-z)/Kp
+			case	1	;	U	=	F.*C.*S;
+			otherwise	;	U	=	F.*C.*O.*S;
+		end 
+	case [2 , 5 , 8] //zakłóceniowe ?/Z
+		switch pgB //pgB = 1:y		2:y'		  3: e=w-y		4:y"
+			case	1	;	Y	= -P.*H.*S;
+			case	3	;	Y	=  P.*H.*S;
+			otherwise	;	Y	= -P.*S;
+		end
+		switch pgR	// pgR = 1:u/Kp	  2:u'/Kp		3:(u'-z)/Kp
+			case	1	;	U	=	P.*H.*C.*S;
+			case	3	;	U	=	OL.*S-1;
+			otherwise	;	U	=	OL.*S;
+		end 
+		Y = Y*K*T;	U = U*K*T;
+	case [3 , 6 , 9] //zakłóceniowe szumowe ?/N
+		switch pgB //pgB = 1:y		2:y'		  3: e=w-y		4:y"
+			case 1	;	Y	= H.*S;
+			case 2	;	Y	= -OL.*S;
+			case 3	;	Y	= -H.*S;
+			case 4	;	Y	= S;
+			otherwise;	Y	= -OL.*S;
+		end
+		switch pgR // pgR = 1:u/Kp	 2:u'/Kp	   3:(u'-z)/Kp
+			case 1	;	U	=	-H.*C.*S;
+			otherwise;	U	=	-H.*C.*O.*S;
+		end 
+	end
+    //ww  = w;
+    Ujw = U;
+    Yjw = Y;
+ 
+endfunction
+function (GM,PM,DM,Ms,wpi,ws,w1,wL,Ljw) =   makeMargins(Cs,Os,Ps,Hs,d,h,Ts,T,typH,typO,SD)
+
+	mdStr = 'tzfm';
+ 	wL	=	unique([logspace(log10(1/20),log10(10),2000),logspace(log10(10),log10(1000),1000)]);
+    MD=1;
+    if typO==1; d=d+h*pi/2; end;
+    
+    
+	C=nyquistZ(SD?c2d(Cs,Ts,mdStr(MD)):Cs,wL);
+	P=nyquistZ(Ps,wL);
+	O=nyquistZ(Os,wL).*exp(-j*wL*d);
+	H=nyquistZ(Hs,wL);
+	OL=typH==1? C.*O.*P : C.*O.*P.*H;
+
+    if SD; OL=OL.*exp(-j*wL*Ts); end    
+    
+	Z = OL;
+    
+// ix = find(angle(Z)>0,1);
+// Gpi = abs(Z(ix))  ;
+// stab = Gpi<1;   
+// %angle(Z)(1)   
+	ix=find(abs(Z)<=1,1);
+	fi=angle(Z(ix));
+//	stab = stab & (fi<0);
+stab = fi<0;
+	w1=wL(ix);	
+	PM=pi+fi;
+	DM=PM/w1*T;
+	PM=PM*180/pi;
+	GM=1;
+	if stab
+		is=find(abs(Z+1)==min(abs(Z+1)),1);
+		Zs=Z(is); ws=wL(is);
+		Ms=1./min(abs(Z+1));
+        Zx=Z(ix:end);   wLx=wL(ix:end);%??????????????????
+		ix=find(sin(angle(Zx))>=eps,1);
+		if isempty(ix)
+			GM=inf; wpi=inf;
+		   else
+			GM=1/abs(Zx(ix)); 
+            wpi=wLx(ix);
+		end 
+	else
+      (ws,wpi,Ms) = deal(nan);  
+ (GM,DM,PM)=deal(nan);     
+    end     
+    
+    Ljw = Z;
+endfunction
+
+//// Czasowe ################################################################################
+function drawCzasowe(v,t,SkU);//,t,tp,tk,SkU)
+    global NM 
+    global NG
+    if isempty(t); cancel ; end
+
+    KA=v.KA;
+     tp=v.tp; tk=v.tk ; 
+    tol=v.tol; NTol=v.NTol;  u=v.u; y=v.y; AW=v.AW; W=v.W; tW=v.tW; AZ=v.AZ; 
+    Z=v.Z; tZ=v.tZ; tZ0=v.tZ0;
+    tMax=v.tMax; T=v.T; K=v.K;  typReg=v.typReg; pgB=v.pgB; pgR=v.pgR;
+    typB=v.typB; typO=v.typO; ZoS=v.ZoS; PWW=v.PWW; NL=v.NL; NU=v.NU; NY=v.NY; NW=v.NW;
+    NZ=v.NZ; SD=v.SD; Ts=v.Ts ;id=v.id;
+
+    setfigstyle(v.fontSize,v.B,v.I);
+    opt = NM?'nomargin':'margin'; 
+    plotoption(opt);
+    opt = NG?'noxygrid':'xygrid';
+    plotoption(opt);
+// stare zmienne uo,yo (ślady) ; ZS - przerzutnik Zostaw Ślad
+// SU - skala U
+    persistent Tos to yo uo ZS pgBs pgRs SDs // SUs NYs NUs
+    
+    if isempty(ZS); ZS=0;	NYs=NY; NUs=NU; end ; % inicjacja przerzutnika
+    if ~ZS&ZoS; Tos=v.T; (to,yo,uo) = deal( t, y, u); (pgBs,pgRs,SDs)=deal(pgB,pgR,SD);ZS=1; end; % zapamiętanie przebiegów, ustawienie ZS
+     if ~ZoS&ZS; ZS=0 ; end;  % reset ZS
+//korekcje parametrów wymuszeń 
+	tZ0 = max(0,min(tZ0,tMax));
+	if (AW==false);		W=0;  tZ0=0; end
+	if (AZ==false);		Z=0;  tZ0=tMax; end
+	if (tW>tMax);		W=W*tMax/tW ; tW=tMax; end
+	if (tZ>(tMax-tZ0)); Z=Z*(tMax-tZ0)/tZ; tZ=tMax-tZ0; end 
+	
+//######## obliczenia wskaźników  ###############	
+//linie tolerancji dla czasów ustalania się (xUst=średnia z 10% końcowych próbek)
+//procenty liczone od abs(max(x-xUst)) 
+    tUst=v.tMax;
+	uB	=1/K/T;
+	xB	= SkU? uB : 1;
+	pgStr=SkU? pgRstr(pgR):pgBstr(pgB);
+	x	= SkU? u : y;
+
+	ix=find(t>=0.9*tMax);
+	xUst=mean(x(ix));
+	if (abs(xUst)<=1e-9); xUst=0; end
+	e	= x - xUst; 
+	Tol = tol*(max(abs(e)))/100;
+    
+    tUst= t(find(abs(e)>Tol,1,'last'));
+    if isempty(tUst); tUst=t(1); end;
+    if (tUst>=0.99*tMax); tUst=inf; end;
+    Mx	=	max(abs(x)) ;
+    ix	=  find(abs(x)==Mx,1);
+    tPk =	t(ix);
+    Pk	=	x(ix); 
+    try
+        ePk = max(abs(e));
+        ix1 = find(abs(e)==ePk,1);
+        tePk=t(ix1);
+        e2	= e(ix1:end);
+        e2	= e2*sign(e2(1));
+        ePk2= min(e2);
+        ix2 = find(e2==ePk2,1);
+        ovs = -100*(ePk2/ePk);
+        tePk2= t(ix1+ix2-1);
+    catch
+        ovs=nan;
+    end
+    try
+        ax = abs(x);
+        IA=trapz(t, ax)*T*xB ;
+        ITA=trapz(t,t.* ax)*T^2*xB ;
+        ISTA=trapz(t,t.*t.*ax)*T^3*xB;
+    catch
+        (IA,ITA,ISTA)=deal(0); 
+    end
+// #################### koniec obliczeń wskaźników #######################
+// markery narożnikowe , ustalenie  marginesów górnego i dolnego  
+    altscale(false)
+    tickformat(2,'%k');
+    
+    kyB=v.kyB; yB0=v.yB0;   //yB=NY?[0,W]:y; 
+    minyB = min(NY?0:min(y), NW?0:min(W,0));
+    maxyB = max(NY?1:max(y), NW?0:max(W,0));
+    mmB   = max(100*eps,(maxyB-minyB));
+    
+     //yB0=yB0+(maxyB+minyB)/mmB;
+
+    // dyB1 = -0.0*kyB*mmB + mmB*yB0*1;
+    // dyB2 = +0.1*kyB*mmB + mmB*yB0*1;
+    
+    scale([min(t),max(t), (yB0*mmB+minyB)*kyB    , (yB0*mmB+maxyB)*kyB]);  
+    
+ sc = scale; if length(sc)==2 ; sc=[sc,-eps*1e6,eps*1e6]; end;
+ 
+    t0=sc(1); tm=sc(2) ; ts=(t0*0.45+tm*0.55);
+    y0=sc(3); ym=sc(4);
+    stylBO = ~v.NY ? plotset(stylC, MarkerFaceColor = 'Blue' ):...
+                     plotset(stylC, MarkerEdgeColor = 'Blue' );
+    stylRO = ~v.NU ? plotset(stylC, MarkerFaceColor = 'Red'  ):...
+                     plotset(stylC, MarkerEdgeColor = 'Red'  );                    
+    plot(ts,ym, stylO  , id = idKA );                    
+    plot(t0,ym, stylBO , id = idBlueMark);
+    plot(tm,ym, stylRO , id = idRedMark);
+    plot(tm,y0, stylC , id = idtMax) ;
+    
+    minyR = min(NU?0:min(u), NZ?0:min(Z,0))/v.K/v.T;
+    maxyR = max(NU?0:max(u), NZ?0:max(Z,0))/v.K/v.T;    
+
+    kyR=v.kyR; yR0=v.yR0; 
+    mmR = max(100*eps,maxyR-minyR);
+    dyR1 = -0.1*kyR*mmR + mmR*v.yR0*.1;
+    dyR2 = +0.1*kyR*mmR + mmR*v.yR0*.1;
+// skalowanie osi czasu ; opis='t(s)' lub t(ms);
+	if tMax*T<2.5
+     	scalefactor([1000*T,1 ]);
+		opis='t(ms)';
+	else
+		scalefactor([T, 1]);
+		opis='t(s)';
+	end;
+// tylko niektóre wykresy będą schodkowe 
+	// przebieg niebieski: pgB = 1:y	  2:y'	   3:e		 4: y"
+	// przebieg czerwony : pgR = 1:u/Kp	  2:u'/Kp  3:(u'-z)/Kp
+	 SDB = SD  & ((pgB ==1)|(pgB==3)) ; 
+     SDR = ((typReg==0)&(pgR<2))|SD & ((pgR==1)|(typO<3)&(pgR==2) );// 2020-05-16     
+	 SDBs= SDs & ((pgBs==1)|(pgB==3)) ; SDRs= ((typReg==0)&(pgRs<3))|SDs&( pgRs==1 );
+// ślady starych wykresów uo,yo
+	if ZS	
+		if ~NY; plot(to*Tos/T,yo,SDBs?'sh(88f)':'h(aaf)'); end;	
+		if ~NU;
+           altscale(true)
+           plot(to*Tos/T,uo/v.K/v.T,SDRs?'sh(f88)':'h(faa)');
+           altscale(false)
+        end;
+	end
+//linie sygnałów wejsciowych w,z  
+	tw = [0, tW , tMax];
+	w  = [0,  W ,  W  ];
+	tz = [0, tZ0 , tZ0+tZ , tMax];
+	z  = [0, 0	 , Z	  ,	 Z	];
+	if ~NW; plot(tw, w , 'c'		); end
+	if ~NZ;
+        altscale(true);
+        scale([min(t),max(t), minyR+dyR1, maxyR+dyR2]);
+        plot(tz, z/v.K/v.T , 'm'		);
+        altscale(false);
+    end
+%######################################## 
+// główne linie wykresów u,y 
+    inty = '1'; intu='1'; // 2020-05-16 rodzzaj interpolacji
+	cy=SkU?'b':'B'; if SDB; cy=[cy,'s']; inty='<'; end
+	cu=SkU?'R':'r'; if SDR; cu=[cu,'s']; intu='<'; end
+// osie zerowe
+    tp = min(tp,v.tMax);
+    if PWW<2; tp=0; end
+    yBp  = interp1( t , y , tp , inty ); //2020-05-16
+    yRp  = interp1( t , u , tp , intu )/K/T; //2020-05-16
+    if tp<=0; yBp = 0; yRp=0; end;
+    if SkU
+        if ~NY&(PWW<2) ; line( [0,1] , yBp  , '!b' ); end 
+        altscale(true)
+        if ~NU; line( [0,1] , yRp  , '!r' ) ; end  
+        altscale(false)
+    else 
+        if ~NU&(PWW<2) ;  
+             altscale(true)
+             line( [0,1] , yRp  , '!r' )   
+             altscale(false)
+        end   
+        if ~NY; line( [0,1] , yBp  , '!b' ); end 
+    end  
+    if (~NY)&(~SkU) 
+        line( [1,0] , tp   , '!b' );
+    elseif ~NU
+        line( [1,0] , tp    , '!r' );
+    end
+// strefa tolerancji, linie dla ovs,Pk
+    if PWW==-3
+     try                                            //2020-05-15
+        altscale(SkU? true : false);
+        plot([0,tMax,tMax,0],(xUst+[-1,-1,1,1] * Tol)*xB, 'fh(bfb)', idTolT ) ; //'fh(dfd)'
+        activeregion(0,tMax,(xUst-Tol)*xB,(xUst+Tol)*xB, idTolT);
+        plot([tePk,tePk]  ,[xUst,x(ix1)]*xB,'W');plot([tePk,tePk],[xUst,x(ix1)]*xB,'g');
+        plot([tePk2,tePk2],[xUst,x(ix1+ix2)]*xB,'g' )
+        line([0,1],xUst*xB,'k:',idTolT)
+        altscale(false) 
+      end    
+    end 
+    if PWW==-2
+        altscale(SkU? true : false)
+        plot([tPk,tPk],[0,Pk*xB],'g')
+        altscale(false)    
+    end
+// #######     główne linie wykresów   
+    inty = '1'; intu='1'; // 2020-05-16 rodzzaj interpolacji
+	cy=SkU?'b':'B'; if SDB; cy=[cy,'s']; inty='<'; end
+	cu=SkU?'R':'r'; if SDR; cu=[cu,'s']; intu='<'; end
+    try 
+        if PWW==-1 // całkowe - niezbyt dobre dla SD
+           if SkU;
+                altscale(true);
+                plot([0,t,t(end)],[0,u/K/T,0],'fh(fdd)');
+                altscale(false)
+           else
+                plot([0,t,t(end)],[0,y,0],'fh(ddf)');
+           end
+           
+        end
+        if ~NU; 
+            altscale(true);
+            
+            scale([min(t),max(t), (yR0*mmR+minyR)*kyR    , (yR0*mmR+maxyR)*kyR]);
+            //line ( [0,1] , 0 , '!r')
+            
+            if SkU
+              plot(t , u./v.K./v.T , cu , id=idUT)
+            else
+              plot(t , u./v.K./v.T , cu)       
+            end//, id=idUW); 
+        end
+        altscale(false)    
+        if ~NY; plot(t , y , cy,id=idYT) ; end  //,id=idYW); end		
+    end 
+%#######################################
+//zmienialne parametry sygnałów wejściowych w,z
+    if ~PWW
+        if ~NW;		
+            plot(tW	,W,{Marker='<>',MarkerEdgeColor='cyan',Size=10}, id=idW); 
+        end
+        if ~NZ;
+            altscale(true)
+            if  AW ;  
+                plot(tZ0	, 0 ,'mo' , idZ0); 
+            end
+            plot(tZ0+tZ , Z/v.K/v.T , {Marker='<>',MarkerEdgeColor='magenta',Size=10}  , id=idZ );
+            altscale(false)
+        end
+    end 
+    switch id
+        case  idZ0
+            title([spf('tz0≈%-4s',tZ0*T),'s'])
+        case idW
+            title([spf('Δw≈%5s',W),spf(' Δt≈%5s',tW*T),'s   ',spf('Δw/Δt≈%6s/s',W/(tW)/T)])
+        case idZ
+            title([spf('Δz≈%s',Z*uB), spf('   Δt≈%ss',tZ*T), spf('   Δz/Δt≈%s/s',Z*uB/tZ/T)])		  
+        otherwise   //################################### kursory x--o
+            tk  =   max(0,min(tk,v.tMax));    //2020-05-15
+            str_x2  =   '';
+            if PWW==-3; tk=tUst; end
+            if PWW==-2; tk= tPk ; end
+            if v.KW & (~v.NY | ~v.NU) & ((PWW>0)|(PWW<-1))
+                yRk = interp1(t,u,tk,intu)/v.K/v.T; 
+                yBk = interp1(t, y , tk, inty);
+                str_x2 = [sprintf('   (%sₓ=', SkU?pgBstr(pgB):pgRstr(pgR)), spf('%s)',SkU?yBk:yRk)];
+                if NY ; 
+                    str_x2=''; 
+                else 
+                    kursor(KA,tp,tk,yBp,yBk,Color=SkU?'blue':'Blue', id=~SkU&(PWW>0)?idTime:[]) 
+                    if (~SkU)&(PWW>0) ; plot ( tp , yBp , 'ob' ); end
+                end 
+                if v.NU ; 
+                    str_x2='';
+                else
+                    altscale(true) 
+                    if SkU&(PWW>0) ; plot ( tp , yRp , 'or' ); end
+                    kursor(KA,tp?tp:tm,tk,yRp,yRk,Color=SkU?'Red':'red', id=SkU&(PWW>0)?idTime:[]) 
+                    altscale(false)
+                end 
+            end 
+            switch PWW
+                case [ 1 , 2 ]		
+                    intx = SkU? intu : inty; 
+                    xk = interp1(t,x,tk, intx ); //2020-05-16
+                    xp = interp1(t,x,tp, intx ); // 2020-05016
+                    if PWW>1 //(tp >=0);
+                        xp = interp1(t,x,tp, intx); // 2020-05016
+                        space=(xk>xp)?'':' ';
+                        title(['Δ', pgStr,spf(' ≈ %s   Δ',(xk-xp)*xB), ...
+                        pgStr,spf('/Δt≈%s/s', (xk-xp)*xB/(tk-tp)/T ),spf('    Δtₓ₋ₒ≈%ss',(tk-tp)*T), ...
+                        spf('  (%sHz)', abs(1/(tk-tp)/T) ) ] )
+                    else
+                        space=(xk>=0)?'':' ';
+                        title([ pgStr, spf('ₓ  ≈ %s',xk*xB), spf('   tₓ≈%ss  ',tk*T),str_x2])
+                    end
+                case -2			// x_ust, xPk, tPk
+                    title([pgStr,spf('ₑₓ  ≈ %s  ',Pk*xB),spf(' tₑₓ  ≈ %ss  ',tPk*T),pgStr,spf('_≈%s',xUst*xB)])
+                case -3			// ovs, tol, t_ust
+                    title([sprintf('%s :  ovs≈%3.1f%%   tolₓ≈±%3.1f%%  ',pgStr,ovs,tol),spf('tₓ≈%ss',tUst*T)]);
+                case -1			// całkowe
+                    title([spf([' IA',pgStr,' ≈ %s  '],IA),spf(['   ITA',pgStr,' ≈ %s'],ITA),spf(['   ISTA',pgStr,' ≈ %s'],ISTA) ]); 
+                otherwise
+                    title('Odpowiedzi czasowe');
+            end 
+    end		
+    //opisy osi i legenda 
+ 	label ( opis, ~NY?pgBstr(pgB):NW?' ':'w', ~NU?pgRstr(pgR):NZ?' ':'z');   
+	if ~NL;
+        legend( [NW?'':'w\n',NY?'':pgBstr(pgB),NY?'':'\n',...
+				 NZ?'':'z\n',NU?'':pgRstr(pgR)],...
+				 [NW?'':'c',NY?'':SkU?'b':'B',NZ?'':'m',NU?'':SkU?'R':'r']);
+	end
+
+endfunction
+function (tMax,KW,KA,NY,NU,tp,tk,NTol,PWW,kyB,yB0,kyR,yR0,wp) = dragCzasowe(v, x,  m, id)
+KW=v.KW; KA=v.KA; tp=v.tp; tk=v.tk; NY=v.NY; NU=v.NU; tMax = v.tMax;
+NTol=v.NTol; PWW=v.PWW; kyB=v.kyB; kyR=v.kyR; yB0=v.yB0;; yR0=v.yR0;   wp=v.wp ; 
+
+switch id
+    case idBlueMark ; 
+        if  m
+            (kyB, yB0) = deal(1,0) ;
+        else
+            NY = not(NY);
+        end 
+    case idRedMark 
+        if  m
+            (kyR, yR0) = deal(1,0);
+        else
+            NU = not(NU);
+        end    // case idtMax;  if m; tMax= dialogX( v.tMax , v.T,1e-3, str = 'tMax = '); end   
+    case idKA 
+      //if (m & (PWW ~=0)) ;  wypis_t(v); end
+      if ~m 
+       (KW,KA,tp,PWW,NTol,wp) =  deal(~PWW , 0 , tp , ~PWW , 1,0);
+      end  
+    case [idTime, idYT,idUT];
+        if m & PWW & ~KA  ; wypis_t(v); end    
+        switch PWW
+            case [1,2]
+                if m & KA
+                    tk = dialogX(tk,v.T,0,tMax, str='Pozycja kursora tₓ = %6ss'); 
+                    v.tk=tk;
+                    KA = false;    
+                elseif KA
+                    KA=false;
+                elseif ~m 
+                   KA=true;
+                end    
+            case [-1,-2,-3]
+                KA = false;
+        end    
+    otherwise    
+        KA = false; 
+        if m ; disp('-'); end
+       
+end
+endfunction
+function		str		= pgBstr(pg)
+switch pg
+	case 1	;	str = 'y';
+	case 2	;	str = 'y"';
+	case 3	;	str = 'e';
+	case 4	;	str = 'y''';
+	otherwise;	str = '??';
+end
+endfunction
+function		str		= pgRstr(pg)
+switch pg
+	case 1	;	str = 'u';
+	case 2	;	str = 'u''';
+	case 3	;	str = 'u"';
+	otherwise;	str = '??';
+end
+endfunction
+function wypis_t(v)
+KA=v.KA; PWW=v.PWW;tp=v.tp; tk=v.tk; t=v.t; u=v.u; y=v.y; T=v.T; 
+//uB=v.uB ; 
+uB=1/v.K/v.T;
+pgB=v.pgB; pgR=v.pgR; SkU=v.SkU; tMax=v.tMax; tol=v.tol;
+
+m=true;	msg='?x?';
+if m
+	pgStr=SkU? pgRstr(pgR):pgBstr(pgB);
+	x  = SkU? u : y;
+	xB = SkU? uB : 1;
+	xk = interp1(t,x,tk,'1');
+	xp = interp1(t,x,tp,'1');
+
+	xB	= SkU? uB : 1;
+	pgStr=SkU? pgRstr(pgR):pgBstr(pgB);
+	x	= SkU? u : y;
+
+	ix=find(t>=0.9*tMax);
+	xUst=mean(x(ix));
+	if (abs(xUst)<=1e-9); xUst=0; end
+	e	= x - xUst; 
+	Tol = tol*(max(abs(e)))/100;
+		tUst= t(find(abs(e)>Tol,1,'last'));
+		if isempty(tUst); tUst=t(1); end;
+		if (tUst>=0.99*tMax); tUst=inf; end;
+		Mx	=	max(abs(x)) ;
+		ix	=  find(abs(x)==Mx,1);
+		tPk =	t(ix);
+		Pk	=	x(ix); 
+		try
+			ePk = max(abs(e));
+			ix1 = find(abs(e)==ePk,1);
+			tePk=t(ix1);
+			e2	= e(ix1:end);
+			e2	= e2*sign(e2(1));
+			ePk2= min(e2);
+			ix2 = find(e2==ePk2,1);
+			ovs = -100*(ePk2/ePk);
+			tePk2= t(ix1+ix2);
+		catch
+			ovs=nan;
+		end
+		try
+			ax = abs(x);
+			IA=trapz(t, ax) ;
+			ITA=trapz(t,t.* ax) ;
+			ISTA=trapz(t,t.*t.*ax);
+		catch
+			(IA,ITA,ISTA)=deal(0); 
+		end
+	
+	switch PWW
+		case 2
+		  msg=sprintf('Δ%s=%+#10.3n	  Δt=%+#10.3n	Δ/Δt=%+#10.3n',pgStr,(xk-xp)*xB , (tk-tp)*T ,(xk-xp)*xB/(tk-tp)/T );
+		case 1
+		  msg=sprintf(' %sₓ=%+#10.3n  tₓ=%-#10.3n',pgStr, xk*xB , tk*T );
+		case -2			// x_ust, xPk, tPk
+		  msg=sprintf('%s_=%.3f  %sₑₓ=%.3f  tₑₓ=%.2ks',pgStr,xUst*xB,pgStr,Pk*xB,tPk*T) ;
+		case -3			// ovs, tol, t_ust
+		  msg=sprintf('%s: ovs=%3.1f%%  tolₓ=±%3.1f%%  tₓ=%.2ks	',pgStr, ovs, tol, tUst*T);
+		case -1			// całkowe
+		  msg=sprintf('%s:	IA=%8.2e   ITA=%8.2e   ISTA=%8.2e', pgStr, IA, ITA , ISTA);	 
+		otherwise
+		  msg=' ';
+	end	  
+   
+   disp(msg);//fprintf('\n%s',		 msg );
+   NTol=true;	 
+end
+//KA=not(KA);     
+endfunction 
+function ( W  , tW )	= dragW	  (v,dx,dy,m, W, tW) //2020-05-16
+ h=v.h;
+	if ~m
+		tW = max(h,h*round((tW+dx)/h));
+	else
+		W  = W+dy;
+	end 
+endfunction
+function (W , tW )		= upW	  (v,dx,dy,m, W, tW, T ) // 2020-05-16
+h=v.h;
+	if ~m
+		tW = max(h,h*round((tW+dx)/h));
+	else
+		W  = W+dy;
+	end 
+	if (dx==0)&(dy==0)&m
+		//( W,tW )				=	dialogW(W,tW,T,0,1,m);
+        W  =  dialogX(W,1,str='Wartość zmiany wymuszenia ΔW = %6s');
+        tW1 =  dialogX(tW,T,h,str='Czas trwania zmiany Δt = %6ss');
+        tW = h*round(tW1/h);
+        if tW ~= tW1
+            dialog(sprintf('Wartość czasu Δt zaokrąglono do %gs',tW  )); //2020-05-16
+        end        
+	     fprintf('\nΔW=%+#10.3n	 Δt=%-#10.3n', W , tW*T); 
+    end
+endfunction 
+function (Z , tZ )		= dragZ	  (v,dx,dy,m, Z,tZ,uB) // 2020-05-16
+//uB
+     h=v.h;
+	if ~m
+		tZ = max(h,h*round((tZ+dx)/h));
+	else	
+    //altscale(true);
+		//Z  = (Z+dy/uB);
+    //altscale(false);    
+        // Z
+        // dy
+	end 
+endfunction
+function (Z , tZ )		= upZ	  (v,dx,dy,m, Z,tZ,T,uB)
+  h=v.h;
+	if ~m
+		tZ = max(h,h*((tZ+dx)/h)); // 2020-05-16
+	else
+        Z  = dialogX(Z,uB,str='Zmiana zakłócenia, ΔZ = %6s' );
+        tZ1 = dialogX(tZ,T,0,str='Czas trwania zmiany Δt = %6ss' );
+        tZ = h*round(tZ1/h); //                2020-05-16
+        if tZ ~= tZ1
+            dialog(sprintf('Wartość czasu Δt zaokrąglono do %gs',tZ  )); //2020-05-16
+        end        
+	 //(Z, tZ ) = dialogZ(Z, tZ, T, uB);
+        fprintf('\nΔz=%+#10.3n	Δt=%-#10.3n', Z*uB , tZ*T);
+    end    
+endfunction
+function (tZ0)			= dragZ0  (v,dx,tZ0)
+    h = v.h;
+	 tZ0 = max(0,h*floor((tZ0+dx)/h)); //2020-05-16
+endfunction
+function tZ0			= upZ0	  (v,dx,m,tZ0,T,tMax) //2020-05-16
+    h = v.h;
+//if m  
+   tZ01 = m &(dx==0)?dialogX(tZ0,T,0,tMax,'tz0= '):dragZ0(v,dx,tZ0); //2020-05-16
+   tZ0 = h*round(tZ01/h);
+   if tZ0 ~= tZ01 ; 
+    dialog(sprintf('Wartość czasu tZ0 zaokrąglono do %gs',tZ0  ));
+   end
+   if m ;fprintf('\n tz0=%-#10.3n ', tZ0*T); end
+//end   
+endfunction
+function (msg,cursor,tk)= overCzasowe (v,x,m,x1,y1,id)
+    //tk = (m|(v.KW==2)) ? v.tk : max(0,min(v.tMax,x));
+    tk = v.tk;
+    cursor = (~isempty(id)) ;
+    //msg = sprintf('id=%d ',id);
+    if isempty(id)
+        msg = 'Shift+klik : wypis pustej linii w oknie komend';
+        cursor = false;
+    else    
+        msg = sprintf(spf('%6ss',x1*v.T) );
+        cursor = true;
+    end    
+    if (v.KA & v.KW & ~m);   tk = max(0,min(v.tMax,x)); end
+    
+    if (~isempty(id)) 
+      switch id 
+         case [idBlueMark]
+           msg=~v.NY?'(klik) : ukryj wykres ;   (↑||↓) : zmiana skali ;   Shift+(↑||↓) : przesunięcie  ;   Shift+klik :  skale normalne' : '(klik) : pokaż wykres ';
+         case [idRedMark]
+           msg=~v.NU?'(klik) : ukryj wykres ;   (↑||↓) : zmiana skali ;   Shift+(↑||↓) : przesunięcie  ;   Shift+klik :  skale normalne' : '(klik) : pokaż wykres ';
+        case idtMax 
+          msg='(Shift+klik)  :  zmiana czasu tMax';
+        case [idTime,idYT,idUT]
+          cursor = true;
+          if ~v.KA & v.PWW>0 
+             msg='(klik) : odblokowanie kursora   ;  (←↓|↑→) :  zmiana pozycji tₓ kursora  ;  (Shift+klik) : wypis w oknie komend';
+          elseif v.PWW>0  
+             msg='(klik) : zablokowanie  (Shift+klik) : wprowadzenie pozycji tₓ kursora';  
+          elseif v.PWW<0
+             msg = '(Shift+klik) : wypis w oknie komend';
+          end
+        case idTolT 
+          msg='(↑||↓) : zmiana szerokości strefy tolerancji' ; 
+        case idKA  
+            switch v.PWW
+            case 0
+                msg='(klik) : pokaz kursorów o--x '; 
+            otherwise
+                msg='(klik) : ukrycie kursorów, tₒ=0  ;  (↑||↓)  : zmiana trybu kursora x '; 
+            end
+        case [idW ] //2020-05-16
+            msg='przeciągnij poziomo Δt;  (Shift) : przeciagnij pionowo ΔW;      (Shift+klik) : wprowadź  kolejno ΔW , Δt ';
+        case [idZ ] //2020-05-16
+            msg='przeciągnij poziomo Δt;     (Shift+klik) : wprowadź  kolejno ΔZ , Δt ';
+        case idZ0
+            msg = 'przeciągnij tZ0 poziomo    (Shift+klik)  :  wprowadź wartość tZ0';
+            
+      end
+    // else
+        // if v.KA; msg='(klik) : zablokowanie pozycji tₓ kursora '; end
+    end 
+   
+//disp(v.KA)    
+endfunction
+
+//// Schemat ###################################################################
+function drawSchemat(v,GM,DM,PM,Cs,Os,Ps,Hs,d,h,nSigma,UN,W,tW,Z,tZ,tZ0,typSch,typO,typP,typH,typReg,ORA,typN,AW,AZ,AN,LN,pgB,pgR,NY,NU,NW,NZ,Kp,Ti,b,c,Td,Nd,T,K,p,H2O,PWS,nO,SD,MD,Ts,AltN,uMax,uMin,Awup,id,m)
+a1=v.a1;a2=v.a2;b1=v.b1;b2=v.b2;
+//function drawSchemat(v)
+
+global NM 
+	plotoption noframe;
+	if ~NM; scale equal; end 
+	plotoption nomargin
+	plotoption nolabel
+	zB=1/K/T;
+Pa=v.AltP+1;
+
+if typO==1; d=d+h*pi/2; end;
+
+	plot(0,-15.5,'.w'); //plot(0,-18.5,'.');
+	styl0	= ' ';//'c'; 
+	stylN	= LN?sprintf('fH(%x%x%x)|k',15*rand,15*rand,15*rand):'fh(ddd)|k';
+	dp		=	4	 ;	// typowy przyrost pozycji(wy-we)
+	jdp		=	j * dp; 
+	Bp		=	12+3j;	//	blok  parametrów
+	dj		=	j*imag(Bp);
+	BP		=	10+8j ;  //  blok	 procesu
+	BR		=	14+8j ; // blok	 regulatora
+	BO		=	12+8j; // blok opóźnienia 
+	BH		=	12+4j; // blok sprzężenia
+	dS		=	  3;   // średnica bloku sumacyjnego
+	biegun	=	p;		//	 p - jest później zajęte jako pozycja
+//'s²T²-6sT+12|s²T²+6sT+12'
+
+	if PWS; typSch=1; 
+	else ; 
+		if typSch>7; typP=3; end;
+		if typP<3; typSch = min(7,typSch); end;
+	end
+
+	nM=1; 
+	tekstM	=	{'M1','M2','M3'};
+	tekstSch	=	{'Interaktywny schemat blokowy',...
+				 'Regulacja prędkości kątowej ω(t)=ω(0)+Δω(t) ',...
+				 'Regulacja prędkości liniowej v(t)=v(0)+Δv(t) ',...
+                 'Regulacja napięcia na kondensatorze u(t)=u(0)+Δu(t)',...
+				 'Regulacja prądu w obwodzie indukcyjnym i(t)=i(0)+Δi(t)',...
+				 'Regulacja poziomu cieczy w zbiorniku h(t)=h(0)+Δh(t)',...
+				 'Regulacja temperatury ϑ(t)=ϑ(0)+Δϑ(t)',...
+				 'Regulacja położenia kątowego α(t)=α(0)+Δα(t) ',...
+				 'Regulacja położenia liniowego x(t)=x(0)+Δx(t) '};
+				
+  opisW =	{'','Δωzad[rad/s]','Δvzad[m/s]','Δuzad[V]','Δizad[A]','Δhzad[m]','Δϑzad[K]','Δαzad[rad]','Δxzad[m]'};
+  opisZ =	{'',[typP<2?'B∙Δω,':'','Δmop[Nm]'],[typP<2?'B∙Δv,':'','ΔFop[N]'],...
+                [typP<2?'G∙Δu, ':'','Δiobc[A]'],['Δsem',typP<2?',R∙Δi':'',',∆u','[V]'],...
+				typP<2?'Kup∙Δh,ΔQzak[m³/s]':'ΔQzak[m³/s]',typP<2?'ΔPstr[W]':'Kpc[W/K]∙Δϑot[K]',...
+				'Δmop[Nm]' , 'ΔFop[N]' };
+  opisU =	{'','Δmzad[Nm]','ΔFzad[N]','Δizad[A]','Δuzad[V]','ΔQzad[m³/s]','ΔPzad[W]','Δmzad[Nm]','ΔFzad[N]'};
+  opisUp	=	{'','Δme[Nm]','ΔFnap[N]','Δi[A]','Δu[V]','ΔQ[m³/s]','ΔPg[W]','Δme[Nm]','ΔFnap[N]'};
+  opisYp	=	{'',' Δω[rad/s]',' Δv[m/s]',' Δu[V]',' Δi[A]','Δh[m]','Δϑ[K]',' Δα[rad]',' Δx[m]'};
+  opisY =	{'',' Δωh[rad/s] ',' Δvh[m/s] ',' Δuh[v] ',' Δih[A] ',' Δhh[m]',' Δϑh[K]',' Δαh[rad] ',' Δxh[m] '};
+  opisO =	{'','reg.m','reg.F','reg.u','reg.i','reg.h','reg.ϑ','reg.α','reg.x'};
+  opisK =	{'','Kᵥ=1/J[kgm²]','Kᵥ=1/M[kg]','Kᵥ=1/C[F]','Kᵥ=1/L[H]','Kᵥ=1/A[m²]','Kᵥ=1/Cc[J/K]','Kᵥ=1/J[kgm²]','Kᵥ=1/M[kg]'; ...
+             '','a₁=J[kgm²]'  ,'a₁=M[kg]' ,'a₁=C[F]' ,'a₁=L[H]' ,'a₁=A[m²]' ,'a₁=Cc[J/K]','a₁=J[kgm²]'  ,'a₁=M[kg]'  };
+  opisp =	{'','p= -B/J' ,'p=-B/M'    ,'p= -G/C','p= -R/L','p=-Kᵤ/A'    ,'p=-Kpc/Cc','p= -B/J' ,'p=-B/M' ; ...
+             '','a₀=B[Ns]','a₀=B[Ns/m]','a₀=G[S]','a₀=R[Ω]','a₀=Kᵤ[m²/s]','a₀=Kpc[W/K]','a₀=B[Ns]','a₀=B[Ns/m]'};
+  //opisT		=	{'','T=Ts/2+Treg+Tm+Th','T=Ts/2+Treg+Tf+Th','T=Ts/2+Treg+Tu+Th'};  
+  opisT =	{'','','','','','','','',''};  
+		 
+  //tekstP		=	{'Kᵥ|s','Kᵥ|s - p' ,'Kᵥ|s','Kᵥ|s - p' ; '1|a₁s','1|a₁s+a₀','1|a₁s','1|a₁s+a₀'};
+  
+  
+  tekstP		=	{'Kᵥ|s','Kᵥ|s - p','Kᵥ|(s-p)∙s' ; '1|a₁s','1|a₁s+a₀','1|(a₁s+a₀)∙s'};
+  
+  
+  tekstPi	=	{'P₁(s)','P₂(s)','P₃(s)'};
+  tekstO		=	{'1' ,...
+                'e⁻ˢᵀ' ,...
+				's²T²-6sT+12|s²T²+6sT+12' ,...
+				'pade2(T/2)*;bessel2(T/2)',...
+				'e⁻ˢᵀ′²|1+sT/2',...
+				'1|(1+sT/r)ʳ' , ...	
+                'b₁s+1|a₁s+1', ...
+                'b₂s²+b₁s+1|a₂s²+a₁s+1', ...     
+				'bᵣsʳ+..+b₀|aᵣsʳ+..+a₀'	 };
+  SizeO    =    { k12*12, k12*13,k12*9,k12*10,k12*12,k12*12,k12*12,k12*10,k12*12}  ;             
+  tekstOi=tekstO;//		=	{'O₁= 1','O₂(sT)=;e⁻ˢᵀ','O₃(sT)=;pade2(sT)','O₄(sT)','O₅(sT)','O₆(sT)','O₇(s)','O₈(s)','O₉(s)'};				
+  tekstNwg		=	{' 3M ',' 2M ',' 1M ',' - ',' CHR ',' ZN ',' CHR2 ',' ZNs ', ' mod ',' sym ','??' } ;			
+  tekstH		=	{'0' , '1' , 'L/M' }	;	
+  tekstHi	=	{'0' , '1' , 'H(s)' }	;	
+  tekstR	=	{'P ','PI ','IP ','PI+','PID'};	 
+  wzorStd	=	{'P:    u = Kp { w - y }',...
+				 'PI:   u = Kp { w - y + (w - y) / (sTi) }',...
+				 'IP:   u = Kp { 0 - y + (w - y) / (sTi) }',...
+				 'PI+:  u = Kp { bw - y + (w - y) / (sTi) }',...
+				 'PID: u=Kp{bw-y+(w-y)/(sTi)+(cw-y)sTd/(1+sTd/N)}'};
+  wzorAlt		=	{'P:  u = Kp ( w - y )',...
+				 'PI:   u = Kp ( w - y ) + Ki (w - y) / s',...
+				 'IP:   u = Kp ( 0 - y ) + Ki (w - y) / s',...
+				 'PI+:  u = Kp ( bw - y) + Ki (w - y) / s',...
+				 'PID: u=Kp(bw-y)+Ki(w-y)/s+Kd(cw-y)s/(1+sTf)'};
+  wzorS2    =    '2S: u = (e>eH)? uMax : (u<-eH)? uMin : u';               
+  wzor		=	 (AltN==1)|(AltN==3)? wzorAlt	: wzorStd;
+  //tekstMD	=	{'(tustin)','( zoh )','( foh )'}; 
+
+(Kp,Ti,Td,typN,typReg,wzorNast) =autoNastawy(Kp,Ti,Td,typN,typReg,typP, p, SD, Ts) ;
+  
+  p0 =	0;
+  pw =	p0 + 2.5 +j*imag(BR/2+j*3);		dw = j*(imag(p0-pw)+dS/2);	// pozycja i długość linii sygnału w(t)		
+
+  [PW,CW,OW,HW] = deal(0); //parametry P,C,.. niewidoczne
+if PWS>0
+   switch id
+		case [idR,idCKp,idCTi,idCKi,idCb,idCTd,idCKd,idCNd,idCc]
+		 CW = 1;
+		case [idO, idOT,idOn,idOLM ]
+		 OW = 1;
+		case [idP, idPK, idPp]
+		 PW = 1; 
+		case idH;
+		 HW = 1;	
+   end
+end 
+	switch PWS
+	  case [ 1 , 2 ]
+		[PW,CW,OW,HW] = deal(1);
+	  case -1
+		[PW,CW,OW,HW] = deal(0);
+	end
+//if PWS<0; PW=1;OW=1;HW=1; end    
+  % --------------------------------------------------
+ % p =	 funkcja( p		,dp			,styl				, txt				, id , font );	//objaśnienie
+ %---------------------------------------------------
+ pr =	blok	( p0			,BR			, ['fw|',SD?'':'']		, ' '				   );  //ramka regulatora
+  
+ 
+  blok	( pr-3		,-5-2.5j		, styl0		, typReg>0?tekstR{typReg}:'2s  ' , idR,fontset(Bold=true)	    );  //zmiana typu reg.
+  blok  ( pr        ,-3-2.5j        , styl0     , ''                                        , idRLim    ); // ogranicznik u  
+  
+ if typReg>0
+	if (ORA);
+        dz = 0.5*(1-j); dx=1.6; dy=1.0j; dl=dx+2*real(dz);	
+		p=linia(pr-0.5,-dl);
+		p=linia(p+dy,dz);p=linia(p,dx);p=linia(p,dz');%'
+		p=linia(p-2*dy,-dz);p=linia(p,-dx);linia(p,-dz');%'%'
+	end 
+ else
+        dz = 0.5*(1-j); dx=1.2; dy=1.75j; dl=dx+2*real(dz);	
+        p  = linia(pr+dy-.5,-dl);
+        p  = linia(p ,-2*dy);
+        p  = linia(p-1.5,dl);
+        p  - linia(p,2*dy);
+ end 
+
+fs_1 = v.fontSize-1; 
+f_1r = fs(v.fontSize-2, Color = [255,0,0] );
+f_1b = fs(v.fontSize-2, Color = [0,0,255] );
+f_1c = fs(v.fontSize-2, Color = [0,255,255]);
+f_1m = fs(v.fontSize-2, Color = [255,0,255]);
+f_1 = fs(v.fontSize-2);
+f_r = fs(v.fontSize, Color=[255,0,0], Bold=(~v.SkU | NU)? false : true );
+f_b = fs(v.fontSize, Color=[0,0,255], Bold=( v.SkU | NY)? false : true ) ;
+f_c = fs(v.fontSize, Color=[0,.9 .9] );
+f_m = fs(v.fontSize, Color=[1,0,1] );
+if (typReg>1) &  (ORA)
+		blok	( pr+2.2j	,-3.75-1.5j , styl0	 , Awup?'aw':'-',idRaw ,fontset(Size=k12*9));  //antiwindup
+end
+ p	=	blok (pw+0.5		, -6+2.5*j	, AW?'fw|c':' '	, AW? 'w  ':'w=0'	, idwa	,f_c	);	// active region dla W
+		napis( pw+2.5j-3.0, 0			, 'bl'				, opisW{typSch}     , f_1c 		);	// opis sygnału W
+ p	=	linia( pw			, dw		, NW?'fw|c':'fc|c'	,' '				, idw		);	// sygnał w(t)
+ p	=	suma	( p0+2.5-dS/2 , dS		, 'k'				,'+ -'							);	// sumator uchybu e(t)
+ ps1 =	p-(1+j)*dS/2;	% pozycja wolnego wejścia sumatora uchybu
+ p	=	linia( p			, 0.6*dp	, stylB(NY,pgB==3)	,' '				, ide		);	// sygnał e(t)	
+		napis( p+j*dp/10	, 0			, 'br'				,'e'				, f_b		); 
+        napis( pr           , 0         , 'bl'              ,'u'                , f_r       );  // sygnał u
+ pO =	linia( pr			, dp+1		, stylR(NU,pgR==1)	,'' 				, idu		);	//sygnał  u(t)
+		napis	( pr+dp/2+1.05*jdp	, 0 , 'bc'				, opisU{typSch}     , f_1r		);	// opis sygnału u(t)
+ if H2O 
+	p=	blok	( pO		, BH		, 'fw|b'  , PWS? tekstH{typH}:'H(s)'	, idH		);	// blok H(s) gdy H2O
+ elseif OW
+	p=	blok	( pO		, BO		, 'fw|r'  ,OW?tekstO{typO}:tekstOi{typO}, idO,fontset(Size=SizeO{typO})	);	// blok opóźnienia O(s)
+    else
+	p=	blok	( pO		, BO		, 'fw|r'  ,OW?tekstO{typO}:tekstOi{typO}, idO,fontset(Size=SizeO{typO})			);	// blok opóźnienia 
+ end 
+		napis( pO+BO'/2		, 0			, 'ct'				, opisT{typSch}					); %' // opis parametru T	
+
+        napis( p            , 0         ,  'lb'             , 'u'''             , f_r       );  // sygnał u'
+ p	=	linia( p			, dp+1		, stylR(NU,pgR==2)	, ''				, idup  	);	// sygnał u'(t)
+ 		napis( p +1.05*jdp  , 0		    , 'rb'				, opisUp{typSch}    , f_1r		);	// opis sygnału u'
+ 
+ ps =	suma ( p			, dS		, 'fw|r'			, '-+ '							);	// sumator u-z
+		pz = real(ps-dS/2)+j*imag(pw); // pozycja linii z(t)
+		linia( pz			, dw		, NZ?'fw|m':'fm|m'	, ''				, idz		);	// sygnał z(t)
+		blok ( pz			,-6+2.5*j	, AZ?'fw|m':' '	, AZ?'z':'z=0'		    , idza, f_m	);
+		napis( pz+2.5j		, 0			, 'cb'				, opisZ{typSch}     , f_1m	    );	// opis sygnału z(t)	
+ pP =	linia( ps			, dp+1		, stylR(NU,pgR==3)	, ''				, idub		);	// sygnał u"=u(t)-z(t)
+		napis( ps           , 0			, 'bl'				, 'u"'				, f_r	    );	// symbol u" 
+ p	=	blok ( pP			, BP		, 'fw|k'  ,tekstP{Pa,typP}       , idP		        );	// blok procesu P(s):PW|(typSch>1)?tekstP{typP}:tekstPi{typP}
+		napis( pP+BP/2+j/2	, 0			, 'bc'				, opisK{v.AltP+1,typSch}, f_1	);	// opis Kv
+if typP>1		
+		napis( pP+BP'/2		, 0			, 'tc'				, opisp{v.AltP+1,typSch}, f_1	); //'// opis bieguna p 
+end		
+ py =	linia( p			, 2.5		, 'B'												);	// łącznik do węzła
+ dd = -j*imag(BR/2+3*Bp);
+ p	=	linia( py			, dd		, 'B'												);	// linia  w dół
+		napis( p            , 0			, 'br'				, opisYp{typSch}    , f_1b	    );	// opis sygnału y' 
+ p	=	linia( p			,real(ps-p) , stylB(NY,pgB==2)	, 'y"'				, idyp, f_b	);	// sygnał y"(t)
+
+ p	=	suma	( p			, -dS		, 'fw|b'			, ' ++'							);	// sumator szum+y'
+		pn = p+dS/2+jdp+2j;///2;//p+1+3*j;														// poz. sygn. n(t)
+		blok ( pn			,-6+2.5j	,AN?'fw|k:':' '		, AN?'n':'n=0'		, idna		);  // sygnał n(t)
+		linia( pn			,-j*(imag(pn-p)-dS/2), stylN	, ''				, idns		);	//szara strzałka n(t) 
+ pH =	linia( p			, -dp-1		, stylB(NY,pgB==4)	, 'y'''				, idyb,f_b	);	//sygnał y'(t)
+ switch typO; case	[1,3,4,6,7,8,9] 
+		blok (pH+3j			, -2-2j		, styl0				, '^'				,idH2O,fs(14)); //'	 H<->O	  
+ end	 
+ if ~H2O
+	 p= blok ( pH			, -BH		, 'fw|b' , HW?tekstH{typH}:tekstHi{typH}, idH		 ); 
+ else 
+	 p= blok ( pH			, -BH		, 'fw|r'			 , 'O(sT)'			, idO		 );	 // blok O(s) gdy H2O
+ end 
+ %#########
+  pSH = p; 
+  p =	linia( p			,real(ps1-p), 'B'												 );	 // poziomy łącznik
+		blok ( pSH			,-4-4j		, SD?'fw|b':styl0	 , SD?'!':'~; '		, idSD		 );	 // ciągły / dyskretny 
+		linia( p			,ps1-p		, stylB(NY,pgB==1)	 , 'y '				, idy,f_b	 );	 // sygnał y(t)
+		napis( p+5j		    , 0			, 'bl'				 , opisY{typSch}    , f_1b		 );	 // opis sygnału y(t)
+	
+//-----------------------------koniec podstawowego schematu-----------------------------------------							
+
+// ####### tytuł i wypisy parametrów #####################################
+
+ pt =	p0+j*imag(BR)+2.25*dj;			ar = real(py-pt);							//poz. i rozmiar tytułu/wzoru	
+ p1 = real(pw);			p2 = real(pO);	p3 = real(ps)+4;							// współrzędne kolumn parametrów
+ j1 = j*imag(BR+Bp)/2;	j2=-j1;			j3 = j2-dj; j4 = j3-dj; j5 = j4-0.9*dj;		// współrzędne wierszy parametrów
+
+	blok ( pt			,ar+dj		,'fw'   , tekstSch{typSch}			, idSch	, (typSch>1)?f_1:fs(v.fontSize)	  );  // przykłady obiektów 
+    if PWS
+        txt= GM>1?['GM≈',spf('%5s',GM),spf('  PM≈%5s',PM),spf('°   DM≈%5ss',DM)]:'!  brak stabilności  !';
+        blok (pt            ,ar+dj      ,'fw'   , txt                  , idSch , typReg==0?fs(12,[.5,.5,.5]):[]   ); // funkcja regulatora
+    end 
+if PWS //& ~m
+pt=pt-dj;
+            blok( pt      ,ar+dj  ,'fw'  , ''                                         , idSch ); // druga długa linia na opisy i objaśnienia
+   switch id
+	case idwa
+	  if AW;blok( pt      ,ar+dj  ,'fw'   , [spf('Δw≈%s   ',W),   spf('Δt≈%ss',tW*T)] , idSch ); end // parametry w(t)
+	case idza
+	  if AZ;blok( pt      ,ar+dj  ,'fw'   , [spf('Δz≈%s   ',Z*zB),spf('Δt≈%ss',tZ*T)] , idSch ); end // parametry z(t)
+	case idna
+	  if AN;blok( pt      ,ar+dj  ,'fw'   , sprintf('odchylenie std:  σ≈%.2e  ,  rozkład %s',nSigma,UN?'równomierny':'normalny') , idSch); end  // par. n(t)
+    case idRLim
+      if ORA;   blok( pt  ,ar+dj  ,'fw'   , [spf(' uMax≈%s  ',uMax*zB),   spf(' uMin≈%s  ',uMin*zB)] , idSch); // 
+      else;     blok( pt  ,ar+dj  ,'fw'   , '(brak ogranicznika sygnału u)'              , idSch );
+      end
+    case idRaw
+      if Awup;  blok( pt  ,ar+dj  ,'fw'   , '(układ anty-windup włączony)'               , idSch );  
+      else   ;  blok( pt  ,ar+dj  ,'fw'   , '(brak układu anty-windup !)'                , idSch );  
+      end
+    case idNwg
+            blok( pt      ,ar+dj  ,'fw'   , wzorNast                                     , idSch );
+   end	
+end
+
+if PW
+		blok ( p3+j1	  , Bp   , ' ' ,v.AltP?spf('a₁≈%3s',1/K):spf('K ᵥ ≈%3s',K)       , idPK	);
+	if (typP>1)	
+		blok ( p3+j2 ,Bp ,styl0 ,v.AltP?spf('a₀≈%3s',-biegun/T/K):spf('p≈%3s',biegun/T)  , idPp ); 
+	end 
+end
+//if CW
+	if (id==idR) & ~m //&(typReg>0)
+		blok( pt		,ar+dj  ,'fw'    , typReg>0?wzor{typReg}:wzorS2		             , idSch );  //  wzor na u(w,y,Kp,...)
+	  if SD&(typReg>1)
+		blok (real(pO)-12+j*imag(pt-dj), Bp	   , 'fw'	, '( s --> z ) '				         );
+	  end	
+	end 
+if CW    
+    if typReg==0
+        blok ( p1+j1		, Bp	   , styl0	, spf('Kp≈%3s', Kp/K/T)	 , [] , fs(12,[.5,.5,.5])   ); 
+        blok ( p1+j2		, Bp	   , styl0	, spf('eH≈%3s', uMax/Kp)            , idCeH		    );   // uchyb histerezowy
+    else
+        blok ( p1+j1		, Bp	   , styl0	, spf('Kp≈%3s', Kp/K/T)				, idCKp        );    
+    end 
+    
+	if (typReg>1)
+		if ((AltN==0)|(AltN==2))
+		   blok( p1+j2		, Bp	   , styl0	, spf('Ti≈%3ss', Ti*T)				 , idCTi		);
+		else
+		   blok( p1+j2		, Bp	   , styl0	, spf('Ki≈%3s', Kp/Ti/K/T^2)		 , idCKi		);
+		end
+	end 
+	if (typReg>3)
+		blok  ( p1+j3	  , Bp		   , styl0	, spf('b≈%3s',	b)					 , idCb			);	
+	end 
+	if (typReg>=5)
+		Bp2=Bp*0.63;
+		if ((AltN==0)|(AltN==2))
+		   blok ( p1+j4	  , Bp		   , styl0	, spf('Td≈%3ss', Td*T)				 , idCTd		);
+		p= blok ( p0+j5	  , Bp2		   , styl0	, spf(' N≈%3s', Nd)					 , idCNd ,fontset(Size=k12*9));
+		else
+		   blok ( p1+j4	  , Bp		   , styl0	, spf('Kd≈%3s',Kp*Td/K)				 , idCKd		);
+		p= blok ( p0+j5	  , Bp2		   , styl0	, spf('Tf≈%3ss', Td*T/Nd)			 , idCTf ,fontset(Size=k12*9));
+		end
+		blok	( p		  , Bp2		   , styl0	, spf('c≈%3s',	c)					 , idCc	 ,fontset(Size=k12*9));
+	end;
+end
+if OW
+   switch typO 	
+	  case [2,3,4,5]	
+		blok	( p2+j1	  , Bp		   , styl0	, spf('T≈%3ss',	 T)					 , idOT			); 
+	  case 6
+		blok	( p2+j1	  , Bp		   , styl0	, spf('T≈%3ss',	 T)					 , idOT			); 
+		blok	( p2+j2	  , Bp		   , styl0	, sprintf('r=%d',nO)				 , idOn			 ); 
+      case 7
+		blok	( p2+j1	  , Bp		   , styl0	, spf('b₁≈%3ss',b1*T)				 , idOb1		); 
+		blok	( p2+j2   , Bp		   , styl0	, spf('a₁≈%3ss',a1*T)				 , idOa1		);  
+      case 8
+		blok	( p2+j1	  , Bp		   , styl0	, spf('b₁≈%3ss',b1*T)				 , idOb1		); 
+		blok	( p2+j2   , Bp		   , styl0	, spf('a₁≈%3ss',a1*T)				 , idOa1		);
+        blok	( p2+j1+.8*dj, Bp	   , styl0	, spf('b₂≈%3ss²',b2*T^2)			 , idOb2		); 
+		blok	( p2+j3+j/2 , Bp	   , styl0	, spf('a₂≈%3ss²',a2*T^2)			 , idOa2		);
+	  case 9
+		blok	( p2+j1	  , Bp		   , styl0	, sprintf('%s','[bᵣ .. b₀]')	 , idOL		 ); 
+		blok	( p2+j2	  , Bp		   , styl0	, sprintf('%s','[aᵣ .. a₀]')	 , idOM		 );    end
+end
+%------------------------------------
+ if typReg>0
+	blok ( pr-4.5-2.8j	  , -5-2j	   , styl0	, tekstNwg{typN+4}					  ,idNwg ,	 fs(v.fontSize-2)	 );	 // nastawy wg '	
+ end    
+	if SD & PWS
+	  p=pt-dj;
+		blok ( pSH-6+3.5j  , Bp		   , styl0	, spf('Ts≈%3ss',Ts*T) , idTs, fontset(Size=k12*10)			);
+	end
+//(Kp,Ti,Td,typN,typReg) =	autoNastawy(Kp,Ti,Td,typN,typReg,typP, p )	 
+
+endfunction
+
+function (AltP,SkU,a1,a2,b1,b2,h,uMax,uMin,M1,nSigma,W,tW,Z,tZ,typB,typSch,typO,typP,typH,typReg,ORA,Awup,typN,AW,AZ,AN,UN,LN,pgB,pgR,NY,NU,NW,NZ,Kp,Ti,b,c,Td,Nd,T,K,p,H2O,PWS,nO,LO,MO,SD,MD,Ts,AltN,tMax,tZ0)  =    upSch(v, ...
+Cs,Os,Ps,Hs,d,h,uMax,uMin,M1,nSigma,W,tW,Z,tZ,typB,typSch,typO,typP,typH,typReg,ORA,Awup,typN,AW,AZ,AN,UN,LN,pgB,pgR,NY,NU,NW,NZ,Kp,Ti,b,c,Td,Nd,T,K,p,H2O,PWS,nO,LO,MO,SD,MD,Ts,AltN,tMax,tZ0,id,dx,dy,m,drup)
+
+
+if isempty(id); cancel ; end;
+
+a1=v.a1;a2=v.a2;b1=v.b1;b2=v.b2; AltP=v.AltP; SkU=v.SkU; GM=v.GM; PM=v.PM; DM=v.DM;
+
+
+persistent typOs  typRegs ; 
+if isempty(typOs) ; typOs=typO; end
+if isempty(typRegs) ; typRegs=typReg; end
+dz=dx+j*dy;
+
+switch id
+    //case idSch; if ~m ; PWS = ~PWS; end// typSch
+	case idy;	(NY,pgB,SkU)= pokazPgB(NY,pgB,1,SkU);
+	case idyp;	(NY,pgB,SkU)= pokazPgB(NY,pgB,2,SkU);
+	case ide;	(NY,pgB,SkU)= pokazPgB(NY,pgB,3,SkU);
+	case idyb;	(NY,pgB,SkU)= pokazPgB(NY,pgB,4,SkU);
+	case idu;	(NU,pgR,SkU)= pokazPgR(NU,pgR,1,SkU);
+	case idup;	(NU,pgR,SkU)= pokazPgR(NU,pgR,2,SkU);
+	case idub;	(NU,pgR,SkU)= pokazPgR(NU,pgR,3,SkU);	
+	case idns;		LN	= negacjaLN(LN,AN);
+	case idw;		NW	= not(NW);
+	case idz;		NZ	= not(NZ);	
+    case idH2O;     H2O  = not(H2O);  
+    case idSD;      SD   = not(SD); typN=0;
+    case idwa;
+      if m
+        W  =  dialogX(W,1,str='Wartość zmiany wymuszenia ΔW = %6s');
+        tW =  dialogX(tW,T,0,str='Czas trwania zmiany Δt = %6ss');
+        (AW,typB) = deal(1);
+      else
+        AW = ~AW; typB= AW? 1 : AN? 3 : AZ? 2 : 0; 
+      end   
+//(W,tW,AW,typB)=	dialogW(W,tW,T,AW,typB,m); 
+	case idza;					
+    
+      yB=1; uB=yB/K/T;
+      if  m 
+		(AZ,NZ,typB,Z,tZ,tZ0)	= drupZ ( AZ,NZ, Z, tZ, tZ0, tMax,	T,	uB, AW, PWS, dz);
+      else
+        AZ = ~AZ; typB =AZ? 2 : AN? 3: AW? 1: 0; 
+      end 
+
+      
+	case idna
+      if m
+		(AN,LN,typB,UN,nSigma)	= drupN (AW,AN,UN,	nSigma, PWS, dz);// PWS=0;
+      else
+        AN = ~AN; typB= AN? 3 : AZ? 2 : AW? 1 : 0; 
+      end  
+otherwise     
+if (m==true)
+  switch id 
+    case idO;   typO            = dialogNr(typO,1,9,'rodzaj transmitancji:')  ;
+    case idR;   (typReg,typN)   = dialogNr(typReg,0,5,'regulator [0:2s  1:P  2:PI  3:IP  4:PI+  5:PID]:')  ;    
+    case idP;   nr   = dialogNr(typP+2*AltP,1,6,'1:Kᵥ/s, 2:Kᵥ/(s-p), 3:Kᵥ/(s-p)s, 4:1/(a₁s), 5:1/(a₁s+a₀), 6:1/(a₁s+a₀)s :');            typP = mod(nr-1,3)+1 ; AltP=nr>3 ; typN=0; if (nr==3)|(nr==6);typSch=min(7,typSch); end
+	
+    case idH;   typH        = dialogNr(typH-1,0,1,'tor pomiarowy ')+1;      
+	case idOn;		nO	    = round(dialogX (nO , 1,1,9));
+    case idCeH;     Kp      = dialogEH(Kp,uMax);
+    case idRLim; if ORA;(uMax,uMin)  = dialogP([uMax,uMin],1/K/T,-inf,inf,'[uMax , uMin] = ');end
+	case idCKp;	(Kp,typN)    = dialogX	( Kp,1/K/T	);
+	
+	case idCTi; (Ti,typN)	= dialogX	( Ti, T );
+	case idCTd; (Td,typN)	= dialogX	( Td, T );
+	case idTs;	(Ts,typN)	= dialogX	( Ts, T , h,1);
+	case idCNd; (Nd,typN)	= dialogX	( Nd, 1,  1	  ,25);
+	case idCb;	b			= dialogX	(  b, 1	  );
+	case idCc;	c			= dialogX	(  c, 1	  );
+	case idOLM; (LO,MO)		= dialogLMO ( LO, MO, T);
+    case idOL;  LO          = dialogLO  ( LO , T , str='[ bᵣ .. b₀ ] = ' );
+    case idOM;  MO          = dialogLO  ( MO  , T , str='[ aᵣ .. a₀ ] = ')
+    case idOa1; a1          = dialogX   ( a1, T   );
+    case idOa2; a2          = dialogX   ( a2, T^2 );
+    case idOb1; b1          = dialogX   ( b1, T   );
+    case idOb2; b2          = dialogX   ( b2, T^2 );
+ 	case idOT;	( x,typN)	= dialogX	( T , 1,  T/4 , 4*T );
+								Kp=Kp*x/T; Ti=Ti*T/x; Td=Td*T/x; p=p*x/T; Z=Z*x/T; 
+								tMax=tMax*T/x; tZ0=tZ0*T/x; 
+                                uMax=uMax*x/T; uMin=uMin*x/T; 
+                                Ts=Ts*T/x;// h=h*T/x; h=h*T/x; 
+                                 T = x;
+	case idPK;
+        if AltP
+            ( x,typN)	= dialogX	(1/K , 1, 1/4/K , 4/K );
+            x = 1/x;
+            p = p*x/K;
+        else     
+            ( x,typN)	= dialogX	(K , 1,	 K/4 , 4*K );
+        end    
+			Kp=Kp*x/K; Z=Z*x/K; 
+            uMax=uMax*x/K; uMin=uMin*x/K;
+                         
+            K = x;
+    case idPp;
+        if AltP
+            (x,typN) = dialogX( -p/K , 1/T); p=-x*K; 
+        else
+            (p,typN)	= dialogX	( p , 1/T	);  
+        end
+
+	case idCKi; Ki=Kp/Ti; KiB=1/K/T^2;
+				(Ki,typN)	= dialogX	( Ki,KiB,	eps);
+				Ti= Kp/Ki;
+	case idCKd; Tf=Td/Nd;	Kd=Kp*Td; KdB=1/K;
+				(Kd,typN)	= dialogX (	 Kd,KdB,	eps);
+				Td= Kd/Kp;	Nd=Td/Tf;
+	case idCTf; Tf=Td/Nd; 
+				(Tf,typN)	= dialogX	(	Tf,T,	 Td/25);
+				Nd=Td/Tf;
+	case idSch
+	  if PWS>0
+		//(GM,PM,DM) = deal(0);//drawNyquistOL(v,Cs,Os,Ps,Hs,d,T,typH,[],SD,MD,Ts,[],[],[]);
+		st1=['O |',sprintf('%-6s|','  T ','  K ',' -p','  GM','  PM','  DM','  Kp')];
+		st2=[d2s(typO),' |',spf('%5s |',[typO>1?T:0, K, typP>1?-p/T:0,GM,PM,DM,Kp/K/T])];
+		
+		if typReg>1
+			st1=[st1,sprintf('%-6s|',' Ti')];
+			st2=[st2,spf('%5s |',Ti*T)];
+		end	   
+		if typReg>2
+			st1=[st1,sprintf('%-6s|',' b ')];
+			st2=[st2,spf('%5s |',typReg==3?0:b)];
+		end 
+		if typReg>4	   
+			st1=[st1,sprintf('%-6s|',' Td ',' N ', ' c ')];
+			st2=[st2,spf('%5s |',[Td*T,Nd,c])];
+		end			  
+		disp(st1);disp(st2);
+	  end
+    case 0
+        disp('-');
+	end
+else
+   switch id
+    case idP;    (typP,typN) = zmienTyp(typP,1,3); typSch = (typP==3)?max(8,typSch):min(7,typSch); 
+    case idO;    (typO,typOs) = deal(typOs,typO);
+    case idR;    (typReg,typRegs,typN) = deal(typRegs,typReg,0);
+    case idH;    typH        = zmienTyp(typH,1,2);
+    case idNwg;    typN      =  ~typN;   (Kp,Ti,Td,typN,typReg) =	autoNastawy(Kp,Ti,Td,typN,typReg,typP, p , SD, Ts) ;
+    case idRLim;   (ORA,typReg,Awup) = negacjaORA(ORA,typReg,Awup);// ORA      = ~ORA; if ~typReg&~ORA; typReg=1;end 
+    case idRaw ;   Awup = ~Awup;
+   
+   end
+end
+end
+if ~m&(id==idSch); PWS=~PWS; end	
+endfunction
+
+function (AltP,a1,a2,b1,b2,h,Ts,uMax,uMin,msg,typO,typReg,ORA,typP,typH,typSch,nO,W,AW,NW,Z,AZ,NZ,nSigma,AN,Kp,Ti,b,Td,Nd,c,K,T,p,H2O,AltN,typN,PWS,SD,tMax,tZ0,tZ,tW) =  scrollSchem(v, ...
+ h,Ts,uMax,uMin,id,dy,typO,typReg,ORA,typP,typH,typSch,nO,W,AW,NW,Z,AZ,NZ,nSigma,AN,Kp,Ti,b,Td,Nd,c,K,T,p,H2O,AltN,typN,PWS,SD,tMax,tZ0,tZ,tW,M1,m)
+ 
+ if isempty(id) ; cancel;end
+
+a1=v.a1;a2=v.a2;b1=v.b1;b2=v.b2; AltP=v.AltP;
+
+
+if ~m //true//~m 
+	switch id
+		case idH;	typH	=	scrollY(dy,typH	  ,1,1,2);
+		case idSD ; SD		=	scrollY(dy,SD	  ,1,0,1);
+		case idH2O; H2O		=	scrollY(dy,H2O	  ,1,0,1) ;
+		case idO;	typO	=	scrollY(dy,typO   ,1,1,9);
+		case idR;	typReg	=	scrollY(dy,typReg ,1,~ORA,5);	typN = 0; //if typReg==0; ORA=true; end
+        case idNwg; typN    =   scrollY(dy,typN   ,1,1,6);
+                                (Kp,Ti,Td,typN,typReg) =	autoNastawy(Kp,Ti,Td,typN,typReg,typP, p , SD, Ts ) ;
+                                
+                                
+        //(y , typ0)				=	scrollY( dy , y , dyB=1, Ymin=-1/eps , Ymax=1/eps , typ=0)                        
+		case idP;
+					nr	=	scrollY(dy,typP+3*AltP ,1,1,6 );	
+					typP = mod(nr-1,3)+1 ;  typN=0;
+					switch nr
+						case [1,2,3] ; AltP = false;
+						case [4,5,6] ; AltP = true;
+					end	
+				 	switch nr
+						case [1,2,4,5]; typSch=min(7,typSch);
+						case [3,6]; typSch=8;
+					end;	
+
+
+		case idOn;	nO		=	scrollY(dy,nO	,1,1,9 );	
+        
+        case idOa1; a1      =   scrollY(dy,a1   ,100    );
+        case idOa2; a2      =   scrollY(dy,a2   ,100    );        
+        case idOb1; b1      =   scrollY(dy,b1   ,100    );
+        case idOb2; b2      =   scrollY(dy,b2   ,100    );
+        
+		case idSch;	if ~PWS;  typSch=scrollY(dy,typSch,1,1,9);  typP=(typSch>7)? 3:2; disp([typSch ,typP]); 
+		            end
+		
+//
+					//if PWS<0; typSch=-PWS+1; end
+		case idwa;	if AW; W = scrollY(dy,W,0);	PWS=1; end
+		case idza;	if AZ; Z = scrollY(dy,Z,200/W);	PWS=1; end
+		case idna;	if AN; nSigma=scrollY(dy,nSigma,100,0,10);PWS=1;end
+        case idRLim;
+             if ORA
+                PWS=1;  
+                uMxn = scrollY( dy,uMax, 10 , eps ); 
+                uMin = min(uMxn,uMin*uMxn/uMax);//scrollY(-dy,uMin, 10); 
+                if typReg==0
+                    Kp=Kp*uMxn/uMax;
+                    if Kp==nan; Kp=eps; end
+                end
+                uMax = uMxn;
+             end               
+        case idCeH; Kp      = scrollY(dy,Kp,   -25/Kp);          typN=0;
+        case idCKp; 
+                    Kps=Kp;
+                    Kp		= scrollY(dy,Kp		,100/Kp);			typN = 0;
+					if AltN; Ti = Ti*Kp/Kps; end
+                        
+		case idCTi; Ti		= scrollY(dy,Ti		,100/Ti);		typN = 0;
+		case idCKi; Ti		= scrollY(dy,Ti		,-100/Ti);		typN = 0;
+		case idCb;	b		= scrollY(dy,b		,100);
+		case idCTd; Td		= scrollY(dy,Td		,500/Td,0);		typN = 0;
+		case idCKd; Td		= scrollY(dy,Td		,500/Td,0);		typN = 0;
+		case idCNd; Nd		= scrollY(dy,Nd		,25);
+		case idCTf; Nd		= scrollY(dy,Nd		,-25);
+		case idCc;	c		= scrollY(dy,c		,50);	
+		case idPK;	x		= scrollY(dy,K		,0,0);typN=0;//50/K,0);		typN	=	0;
+							  Kp = Kp*x/K; Z = Z*x/K; 
+                              if AltP; p=p*x/K; end
+                              uMax=uMax*x/K; uMin=uMin*x/K;
+                              K = x;
+		case idPp;	p		= scrollY(dy,p,0);//		,500);
+		case idOT;	x		= scrollY(dy,T,0);		typN	=	0;
+							  Kp=Kp*x/T; Ti=Ti*T/x; Td=Td*T/x; p=p*x/T; 
+							  Z=Z*x/T; tMax=tMax*T/x; tZ0=tZ0*T/x;	tZ=tZ*T/x; tW=tW*T/x;
+                              uMax=uMax*x/T; uMin=uMin*x/T; 
+                              Ts=Ts*T/x; //h=h*T/x;  h=h*T/x;
+                              T = x;
+	end
+end	
+	msg=overSchem(PWS,AN,typReg,id,0);//'scroll';
+endfunction
+function (NY, pgB , SkU)    =   pokazPgB(Ny , pgB0 , pgB1 , Sku)
+    pgB = pgB0 ; NY = Ny; SkU=Sku;
+    if Ny 
+       NY = false ; pgB = pgB1; SkU = false;
+    else
+       if (pgB0==pgB1)
+          NY = true ; SkU = true;
+       else
+          pgB=pgB1 ; NY = false ; SkU = false;
+       end   
+    end
+endfunction
+function (NU, pgR , SkU)    =   pokazPgR(Nu , pgR0 , pgR1 , Sku)
+    pgR = pgR0 ; NU = Nu; SkU=Sku;
+    if Nu 
+       NU = false ; pgR = pgR1; SkU = true;
+    else
+       if (pgR0==pgR1)
+          NU = true ; SkU = false;
+       else
+          pgR=pgR1 ; NU = false ; SkU = true;
+       end   
+    end
+endfunction
+function styl			    =	stylB(NY, OK ) // style strzałek; OK=B
+	if ~NY&OK
+		styl='fb|B';
+	else
+		styl='fw|B';
+	end
+endfunction
+function styl			    =	stylR(NU, OK ) // style strzałek; OK=R
+	if ~NU&OK
+		styl='fr|R';
+	else
+		styl='fw|R';
+	end
+endfunction
+function  msg			    =	msgReg(typReg)
+
+if isempty(typReg); cancel;end;
+
+ tekstReg	=	{'P : regulator proporcjonalny ; u = Kp { w - y }',...
+				 'PI: regulator proporcjonalno-calkujacy  : u = Kp { w - y + (w - y) / (sTi) }',...
+				 'IP: regulator PI bez dzialania proporcjonalnego sygnalu wartosci zadanej	u = Kp { 0 - y + (w - y) / (sTi) }',...
+				 'PI+ : regulator PI z wazonym dzialaniem proporcjonalnym dla sygnalu zadanego ; u = Kp { bw - y + (w - y) / (sTi) }',...
+				 'PID+ : regulator PI+ z dodanym torem rozniczkowania sygnalu sprzezenia zwrotnego; u = Kp{bw-y +(w-y)/(sTi) -ysTd/(1+sTd/N)}'};
+ 
+ msg = ((typReg>0)|(typReg<6))? tekstReg{typReg} : '?';
+
+endfunction
+function (msg,id,cursor,m)	=	overSchem	(PWS,AN,typReg,id0,m)
+
+
+	msg='?';
+    
+	if isempty(id0);	
+		id = 0; cursor=false;
+	else
+		id = id0; cursor=true;
+	end
+    shk = '   (shift+klik)';
+    rol = '   ] || [ '  ;// ( [j] [k] <||>)';
+    klk = '   (klik)';
+    pu  = ' : pokazanie/ukrycie';
+    ad  = ' : aktywacja/deaktywacja';
+    wyp = ' : wypisanie';
+    zm  = ' : zmiana'; 
+    par = ' parametrów';
+    sch = ' opisu schematu';
+
+	switch id
+        case 0  
+            msg = sprintf('%d',id); [shk,wyp,' pustej linii   '];
+ 		case idSch
+            msg = [klk,pu,PWS?[shk,wyp,par]:[par,rol,zm,sch]];
+        case [idwa,idza,idna]    
+            msg=[klk,ad,shk,rol,zm,par,' sygnalu'];
+		case [idy,idyp,ide,idup,idu,idub,idyb,idw,idz]
+            msg = [klk, pu , ' wykresu sygnału'];
+		case idns
+			msg=AN?[klk, ' : ożywienie/zamrożenie szumu']:' ';
+		case idR
+			msg=[klk,shk,rol,zm,' typu regulatora'];
+		case [idP,idO,idH]
+            msg = [klk,shk,rol,zm,' transmitancji'];
+		case [idCb,idCKp,idCTi,idOT,idOn,idOa1,idOa2,idOb1,idOb2, idPK,idPp,idCKi,idCTd,idCKd,idCNd,idCTf]
+			msg=[shk,rol,zm,' wartości parametru' ];
+        case idOLM
+            msg=[shk,zm,' współczynników Licznika i Mianownika transmitancji'];
+		case idH2O
+			msg=[klk,shk,' : zamiana blokow H<->O'];
+			id=id0;
+		case idTs
+			msg=[shk,zm,' okresu próbkowania danych i obliczeń regulatora cyfrowego'];
+		case idSD
+			msg=[klk,zm,' rodzaju regulacji:  ~(ciagla)  /  !(dyskretna)'];
+        case idNwg  
+            msg     =  [klk,rol,zm,' wzoru na nastawy regulatora '];   
+        case idRLim 
+            msg=[klk,ad,' ogranicznika sygnału ;  ',shk,rol,zm,' poziomu ograniczeń'];
+        case idRaw
+            msg=[klk,ad,'układu anti-windup '];
+		otherwise
+        	msg=['?'];	
+	end
+endfunction
+
+//// Częstotliwościowe ##############################################################
+// Bode : 9-wariantów(łącznie z Nyquistem)
+function drawBodeNew(w,U,Y,SD,Ts,K,T, pgB,pgR, SkU, NL, NU, NY, PWW, ZoS,fHz, wp, wk, KW,KA, typB,nB)
+
+//typB+nB: rodzaj char. Bodego 1:|/W|,2:|/Z|, 3:|/N|, 4:arg(/W),5:arg(/Z), 6:arg(./N) 7:Nyquist /W, 8:Nyq./Z, 9:Nyq./N
+if isempty(w); cancel; end
+//
+global NM NG	
+persistent Uo Yo ZS		% stare zmienne (ślady) ZS - przerzutnik Zostaw Ślad
+	opt = NM?'nomargin':'margin'; plotoption(opt);
+	opt = NG?'noxygrid':'xygrid'; plotoption(opt);
+
+    typB=typB+nB;	
+	lw=length(w);	
+    if isempty(ZS); ZS=zeros(1,9); end; % inicjacja przerzutnika
+    if length(ZS)<9;ZS=zeros(1,9); end;
+
+	if ~ZoS&ZS(typB); ZS(typB)=0 ; end;		% reset ZS	
+
+    Uo=isempty(Uo)?zeros(6,lw):Uo;
+    Yo=isempty(Yo)?zeros(6,lw):Yo;
+ 
+	if ~ZS(typB)&ZoS; Uo(typB,:) = U; Yo(typB,:) = Y; ZS(typB)=1; end; % zapamiętanie przebiegów, ustawienie ZS	  
+	
+	if (SD==true) ; 
+		line([1,0], pi/Ts,'c'); // linia pionowa - częst. Nyquista
+		U=U(w<pi/Ts);
+		Y=Y(w<pi/Ts);
+	end		
+
+		X	= Y;
+        moMin = min(abs(X));
+       
+		w	= w(1:length(X));   
+        
+        if (PWW==-2) 
+           V = SkU? U : Y;  
+           wk = w(find(abs(V)==max(abs(V))));
+        else   
+            wk	= min(w(end),max(w(1),wk));
+        end    
+		xx	= interp1(w,X,wk);
+		x	= real(xx);
+		y	= imag(xx);
+		fi	= angle(xx);
+		mo	= abs(xx);
+wp=max(wp,w(1));
+        xx  = interp1(w,X,wp);
+        mop = abs(xx);
+        fip = angle(xx) ;
+
+        
+    	X	= U;
+       
+		xx	= interp1(w,X,wk);
+		x2	= real(xx);
+		y2	= imag(xx);
+		fi2	= angle(xx);
+		mo2	= abs(xx);
+        mo2Min = min(abs(X));
+
+        xx  = interp1(w,X,wp);
+        mo2p = abs(xx);
+        fi2p = angle(xx);            
+ 
+    if typB<7	// Bode mag or phase
+
+        scale(typB<4?'loglog/logdb':'loglin',[w(1),w(end)]) ;
+		
+         (sc,type) = scale;   
+         if (type==='linlin')|(type==='loglin') & ~SkU & ~NY & (wp==0)
+            line( [0,1] ,0   , '!b' ); 
+         end   
+         if ~SkU & ~NY & (wp>0) & (PWW==2)
+            line( [0,1] ,typB<4?mop:fip   , '!b' );
+         end   
+         if (type==='linlin')|(type==='linlog')|(type==='lindb')|(wp>w(1))&(PWW==2)
+           line( [1,0] ,wp   ,SkU?'!r':'!b' ); 
+         end
+         if SkU ; 
+            altscale(true);
+             if (wp>w(1)) & (PWW==2)
+                plot([w(1),w(end)] , (typB<4?mo2p/K/T:fi2p)*[1,1], '!r')
+            else
+                plot([w(1),w(end)], [0,0],'!r')
+            end    
+            altscale(false);
+         end 
+         
+		scalefactor([fHz?1/2/pi/T:1/T,typB<4?(1):180/pi]) ;         
+		if ZS(typB)
+			if ~NU; 
+            altscale(true)
+
+       lenw=length(w);
+
+				plot(w,typB<4?abs(Uo(typB,1:lenw))/K/T:angle(Uo(typB,1:lenw)),'h(faa)') ;
+            altscale(false)    
+			end 
+			if ~NY;
+                   lenw=length(w);
+				plot(w,typB<4?abs(Yo(typB,1:lenw)):angle(Yo(typB,1:lenw)),'h(aaf)') ; 
+			end 
+		end 
+		if ~NU;
+            altscale(true);
+            plot(w(1:length(U)),typB<4?abs(U)/K/T:angle(U),SkU?'R':'r',idUW) ;
+            altscale(false)
+        end
+		if ~NY; 
+            plot(w(1:length(Y)),typB<4?abs(Y):angle(Y),SkU?'b':'B',idYW) ;
+        end	
+////Kursory i wypisy w tytułach
+		if PWW 
+             if ~NU
+                altscale(true) 
+//// !####                
+                if (wp>w(1)) & (PWW>1) 
+                    kursor(KA,wp,wk,typB<4?mo2p/K/T:fi2p,typB<4?mo2/K/T:fi2,Color=SkU?'Red':'red',id=SkU&PWW?idFreq:0) ;
+                else
+                    kursor(KA,w(end),wk,typB<4?mo2Min/K/T:0,typB<4?mo2/K/T:fi2,Color=SkU?'Red':'red',id=SkU&PWW?idFreq:0); 
+                end
+                altscale(true)    
+                if (SkU)&(wp>0)&(PWW==2); plot(wp,typB<4?mo2p/K/T:fi2p, 'or') ; end                 
+                altscale(false)    
+            end  
+            if ~NY //&~SkU
+                if (wp>w(1)) & (PWW>1)
+                   kursor(KA,wp,wk,typB<4?mop:fip,typB<4?mo:fi,Color=SkU?'blue':'Blue',id=SkU?[]:idFreq);                
+                else
+                    kursor(KA,w(1),wk,typB<4?moMin:0,typB<4?mo:fi,Color=SkU?'blue':'Blue',id=SkU?[]:idFreq);   
+                end
+                if (~SkU)&(wp>0)&(PWW==2); plot(wp,typB<4?mop:fip, 'ob') ; end
+            end    
+           
+            titStr='';
+            titStr = [titStr, (SkU?bodeRstr(pgR):bodeBstr(pgB)){typB}  ] ; 
+            if PWW <2               
+                titStr = [titStr, spf('ₓ ≈ %s', typB>3?(SkU?fi2:fi)*180/pi:SkU?mo2/T/K:mo) ];	   
+                if typB>3; titStr=[titStr,'°'];end; 
+                titStr = [titStr, spf(fHz?'   fₓ≈%4sHz  ':'   ωₓ≈%4srad/s  ',fHz?wk/T/2/pi:wk/T)];
+            else
+                switch typB  //1:|/W|,2:|/Z|, 3:|/N|, 4:arg(/W),5:arg(/Z), 6:arg(./N) 7:Nyquist /W, 8:Nyq./Z, 9:Nyq./N
+                case  [1,2,3 ]
+                    modB  = SkU? 20*log10(mo2/mop) : 20*log10(mo/mop);                    
+                    titStr= [titStr,sprintf('ₓ₋ₒ ≈%.2fdB  %.2fdB/dec',modB, modB / log10(wk/wp))];
+                case [4,5,6]
+                    dfi = (SkU? (fi2-fi2p):(fi-fip))*180/pi;
+                    titStr=[titStr,sprintf('ₓ₋ₒ ≈%.2f°' ,dfi )];
+                otherwise
+                  titStr='??';
+                end  
+            end    
+			title(titStr);
+		end	 // of PWF
+        
+        label(fHz?'Hz':'rad/s',typB<4?' ':'[°]',typB<4?' ':'[°]');
+		if ~NL; 
+          legend([NY?'':bodeBstr(pgB){typB},NY?'':'\n',...
+				NU?'':bodeRstr(pgR){typB}],[NY?'':SkU?'b':'B',NU?'':SkU?'R':'r']);
+        end
+		
+	else //################################## Nyquist (tylko jeden wykres)
+		line([1,0],0,SkU?'!r':'b!');
+		line([0,1],0,SkU?'!r':'b!'); 
+		if ~NU & SkU; 
+            if ZS(typB)
+                plot(real(Uo(typB,:)),imag(Uo(typB,:)),'h(f66)') ;
+            end    
+			plot(real(U),imag(U),plotset(styl_B,Color='Red',ArrowEnd=true),id=idUW) ;
+			plot(real(U(1)),imag(U(1)),'oR');
+            if ~NL 
+                legend(bodeRstr(pgR){typB},'R');
+            end
+            if KW
+                kursor(KA,0,x2,0,y2,Color='Red',id=idFreq);   
+                plot([0,x2],[0,y2], KA?'r-':'r:');
+            end
+		end
+		if ~NY & ~SkU; 
+            if ZS(typB)
+                 plot(real(Yo(typB,:)),imag(Yo(typB,:)),'h(66f)') ;
+            end     
+			plot(real(Y),imag(Y), plotset(styl_B,ArrowEnd=true), id=idYW) ;
+			plot(real(Y(1)),imag(Y(1)),'ob');
+            if ~NL
+                legend(bodeBstr(pgB){typB},'B');
+            end
+            if KW
+                kursor(KA,x,x,y,y,Color='Blue',id=idFreq);
+                plot([0,x],[0,y],KA?'b-':'b:');
+            end    
+		end 
+		scalefactor(SkU? 1/K/T : 1);
+		scale equal
+        label('Re','Im')
+	end // ##########################(end of Nyquist)
+	if PWW
+        if typB>6
+            fixd  =  (SkU?fi2:fi)*180/pi;
+            zn = fixd>0?'+':'-';
+            
+            titStr = ' ';
+            titStr = [titStr, (SkU?bodeRstr(pgR):bodeBstr(pgB)){typB}];
+            titStr = [titStr, spf(' ≈ %4s e',SkU?mo2/K/T:mo),upstr([zn,spf('j%s°',abs(fixd))])];
+            titStr = [titStr, spf(fHz?'   fₓ≈%4sHz':'   ωₓ≈%4srad/s',fHz?wk/T/2/pi:wk/T) ];
+            title(titStr);
+        end    
+	else
+       switch typB
+        case [1,2,3]
+            title('Charakterystyki amplitudowe');
+        case [4,5,6]
+            title('Charakterystyki fazowe'); 
+        case [7,8,9]        
+            title('Charakterystyki Nyquista');
+        otherwise
+            title('??')
+       end     
+	end	   
+ 
+endfunction
+function str                    =   wypis_f(v)
+
+		X	= v.Yjw;
+        w   = v.w;
+		w	= w(1:length(X));
+        wp  = v.wp;
+		wk	= min(w(end),max(w(1),v.wk));
+		xx	= interp1(w,X,wk);
+		x	= real(xx);
+		y	= imag(xx);
+		fi	= angle(xx);
+		mo	= abs(xx);
+        moMin = min(abs(X));
+        
+        xx  = interp1(w,X,max(wp,w(1)));
+        mop = abs(xx);
+        fip = angle(xx) ;
+        
+    	X	= v.Ujw;
+		xx	= interp1(w,X,wk);
+		x2	= real(xx);
+		y2	= imag(xx);
+		fi2	= angle(xx);
+		mo2	= abs(xx);
+        mo2Min = min(abs(X));
+
+        xx  = interp1(w,X,wp);
+        mo2p = abs(xx);
+        fi2p = angle(xx);            
+
+	   str = sprintf([v.fHz?'fₓ≈%4.2fHz   ':'ωₓ≈%4.2frad/s   ',...
+				(v.SkU?bodeRstr(v.pgR):bodeBstr(v.pgB)){v.typB>3?v.typB-3:v.typB},...
+				'=%5.3f	 φ≈%+4.1f°'],...
+				 v.fHz?wk/2/pi/v.T:wk/v.T,...
+				 v.SkU? mo/v.T/v.K:mo, fi*180/pi);  
+
+endfunction
+function str				    =	bodeBstr(pgB)
+//	typB	1:|/W|,2:|/Z|, 3:|/N|, 4:arg(/W),5:arg(/Z), 6:arg(./N)
+switch pgB //pgB = 1:y		2:y'		  3: e=w-y		4:y"
+	case 4	;	str = {'|Y''/W|',	'|Y''/Z|'	,	'|Y''/N|'	,	'arg(Y''/W)',	'arg(Y''/Z)',	'arg(Y''/N)',...
+						'Y''/W' ,	 'Y''/Z'	,	 'Y''/N'	};
+	case 1	;	str = {'|Y/W|'	,	'|Y/Z|'		,	'|Y/N|'		,	'arg(Y/W)'	,	'arg(Y/Z)'	,	'arg(Y/N)',...
+						'Y/W'	,	 'Y/Z'		,	 'Y/N'		};
+	case 3	;	str = {'|E/W|' ,	'|E/Z|'		,	'|E/N|'		,	'arg(E/W)'	,	'arg(E/Z)'	,	'arg(E/N)',...
+						'E/W'  ,	 'E/Z'		,	 'E/N'		};
+	case 2	;	str = {'|Y"/W|'	 ,	'|Y"/Z|'	,	'|Y"/N|'	,	'arg(Y"/W)' ,	'arg(Y"/Z)'	 ,	'arg(Y"/N)',...
+						'Y"/W'	,	 'Y"/Z'		,	 'Y"/N'		};
+	otherwise;	str = {'??' ,'??','??','??','??','??','??','??','??'};
+end
+endfunction
+function str				    =	bodeRstr(pgR)
+switch pgR // pgR = 1:u/Kp	 2:u'/Kp	   3:(u'-z)/Kp
+	case 1	;	str = {'|U/W|'	,	'|U/Z|'		,	'|U/N|'		,	'arg(U/W)'	,	'arg(U/Z)'	,	'arg(U/N)'	,...
+					  'U/W'		,	 'U/Z'		,	 'U/N'		};
+	case 2	;	str = {'|U''/W|',	'|U''/Z|'	,	'|U''/N|'	,	'arg(U''/W)',	'arg(U''/Z)',	'arg(U''/N)',...
+						'U''/W' ,	 'U''/Z'	,	 'U''/N'	};
+	case 3	;	str = {'|U"/W|',	'|U"/Z|'	,	'|U"/N|'	,	'arg(U"/W)',	'arg(U"/Z)',	'arg(U"/N)',...
+						'U"/W' ,	 'U"/Z'		,	 'U"/N'		};
+	otherwise;	str = {'??' ,'??','??','??','??','??','??','??','??'};
+end
+endfunction
+function (wk)		            =	scrollBode(v,dy,m,id)
+if isempty(id); cancel; end
+   wk=v.wk;
+   k=2^(1/8);
+   switch id
+        case -1;
+       case [idYW, idUW, idFreq,398]
+          if ~v.KA
+            if dy>0; wk = wk/1.001; end
+            if dy<0; wk = wk*1.001; end
+          end  
+        if m ; dialog('wk'); end    
+        end    
+endfunction
+function (msg,cursor,wk,id)	    =   overBode(v,x,m,x1,y1,id0)	
+	id		=	isempty(id0)? -1 : id0;
+    cursor  = (~isempty(id0)) ;
+    if (id==-1) // & ~v.KA
+        msg0= v.KA? '(klik) : zablokowanie kursora   ' : ' '; 
+        msg = [msg0, '(Shift+klik) : wypis pustej linii w oknie komend'];
+    else
+        if v.KW & v.KA; 
+            msg= ' (klik): zablokowanie   (Shift+klik) : wprowadzenie pozycji kursora';
+        elseif v.KW & ~v.KA
+            msg= ' (klik): odblokowanie kursora ;     (←↓|↑→) : zmiana pozycji ;     (Shift+klik) : wypis w oknie komend';
+        else
+            if v.fHz
+                msg = spf('%6sHz',x1/v.T/2/pi);
+            else
+                msg = spf('%6srad/s',x1/v.T);
+            end    
+        end
+    end 
+    wk	= (~m&v.KA)? max(0,x) : v.wk;
+endfunction
+function		(KA,wk)		    =	upBode(v,m,id)
+
+ wk=v.wk;
+ if isempty(id) ; id=-1; end
+ wk=v.wk; KA = v.KA;
+     xB = v.fHz? 1/2/pi/v.T : 1/v.T;
+ //disp(id)  
+     switch id
+        case [0,-1]
+            KA = false; 
+            if m ; disp('-') ; end
+        case [idUW,idYW,idFreq, 398]
+            if m & KA & v.PWW
+               strf = 'Częstotliwość fₓ = %7sHz';
+               strw = 'Pulsacja ωₓ = %7srad/s';
+               wk = dialogX(wk, xB, 0.001, 100, str=v.fHz? strf : strw);
+               KA = false; 
+            elseif m    
+               disp(wypis_f(v))
+            else
+               KA = not(KA);
+            end  
+        otherwise
+            disp('??')
+     end    
+
+endfunction
+ function		Z			    =	nyquistZ(sys,w)
+	(num,den,Ts) = tfdata(sys);
+	if isempty(Ts);
+		Ts=1;  SD=false;
+	else 
+		SD=true;
+	end;
+nLME=info;
+nLME=nLME(5);
+if nLME>='6'
+	if SD
+		(X,Y)= dnyquist(num{:},den{:},w*Ts);
+	else
+		(X,Y)= nyquist(num{:},den{:},w*Ts);
+	end;	
+else	
+	(X,Y)=nyquist(sys,w*Ts);
+end ;	
+	Z=X'+j*Y';
+
+
+endfunction 
+function (cursor,msg,ixF,wk,id) =   overNyquist(v,ix,id0,m)
+ixF=v.ixF; wk=v.wk;
+
+ if isempty(id0);
+	cursor=false; id=-1;
+ else 
+ 	ww = logspace(-3,2,2000);
+    ww = unique([ww, logspace(log10(1/2),log10(4),1000)]); 
+    wk_ = ww(ix);
+	if ~m & v.KA
+	  ixF = ix;
+	  wk = wk_;
+   end
+   cursor=true;	
+   id = id0;   
+ end 
+    
+ if (id==-1) // & ~v.KA
+        msg0= v.KA? '(klik) : zablokowanie kursora   ' : ' '; 
+        msg = [msg0, '(Shift+klik) : wypis pustej linii w oknie komend'];
+ else
+ 	msg0 = ' (klik): pokazanie kursorów ';
+	msg1 = ' (klik): zatrzymanie  (shift+klik) : wypisanie kursorów';
+    if v.KW & v.KA; 
+            msg= ' (klik): zablokowanie   (shift+klik) : wprowadzenie pozycji kursora';
+    elseif v.KW & ~v.KA
+            msg= '(klik) : odblokowanie kursora   ;  (←↓|↑→) :  zmiana pozycji  ;  (Shift+klik) : wypis w oknie komend';
+    else
+        if v.fHz
+            msg = spf('%6sHz',wk_/v.T/2/pi);
+        else
+            msg = spf('%6srad/s',wk_/v.T);
+        end    
+    end
+ end 
+endfunction
+//NyquistOL
+function                            drawNyquistOLnew(v) 
+
+  setfigstyle(v.fontSize,v.B,v.I);
+     Ts = v.Ts;
+    fontSize = v.fontSize;
+    T=v.T;  
+    OL=v.Ljw; ww=v.wL; Z=v.Ljw; 
+    GM = v.GM;  
+    DM=v.DM;
+    PM=v.PM;
+    w1=v.w1;
+    wpi=v.wpi;  
+    Ms=v.Ms;
+    PWW=v.PWW;
+    NL=v.NL;
+    wk=v.wk;
+    KA=v.KA;
+    fHz=v.fHz;
+    global NM NG  
+    persistent OLo	ZS	 % stare zmienne (ślady) ZS - przerzutnik Zostaw Ślad
+
+    stab = (GM > 1);
+	opt = v.NM?'nomargin':'margin'; plotoption(opt);
+	opt = v.NG?'noxygrid':'xygrid'; plotoption(opt);
+	if isempty(ZS); ZS=0	   ; end; % inicjacja przerzutnika
+	if ~v.ZoS&ZS; ZS=0		   ; end;  % reset ZS 
+	if ~ZS&v.ZoS; OLo = OL;  ZS=1; end; % zapamiętanie OL, ustawienie ZS
+
+	scale('equal', [-2.0, .25, -1.0, .5]);
+    sc  = scale;  
+    dw  = (sc(2)-sc(1))*(0.0025+0.001*fontSize); //15-05-2020
+
+	circle(0,0,1,'h(aaa)')
+	line([0,1],0,'!h(555)')
+	line([1,0],0,'!h(555)')
+
+	if (v.SD==true)
+		w=ww(ww<pi/Ts);
+		lw=length(w);
+		Z=Z(1:lw);	
+	end 
+	if ZS
+		plot(real(OLo),imag(OLo),'h(666)')
+	end 
+        plot(real(Z),imag(Z),'K', id=398 )
+	if stab
+       	ix=find(abs(Z)<=1,1);
+        fi=angle(Z(ix));
+		is=find(abs(Z+1)==min(abs(Z+1)),1);
+		Zs=Z(is); ws=ww(is);  
+
+		wezel(-1/GM, dw ,'fh(d0d)');
+		wezel(cos(fi)+j*sin(fi),  dw ,'fh(0ee)');
+		linia(-1,Zs+1,'h(0f0)');
+		wezel(Zs,   dw ,'fh(0e0)');
+		txtGM = [spf(' GM≈%2s@',GM),spf('%s',v.fHz?wpi/T/2/pi:wpi/T), v.fHz?'Hz':'rad/s'];
+		%txtMs = [spf('Ms≈%2s @',Ms,5),spf('%s',fHz?ws/T/2/pi:ws/T), fHz?'Hz':'rad/s'];
+        txtMs = [sprintf(' Ms≈%.2f',Ms)];
+        txtAtMs =[spf(' @%s',v.fHz?ws/T/2/pi:ws/T), v.fHz?'Hz':'rad/s'];
+		txtPM = spf(' PM≈%2s˚',PM);
+        txtAtPM=[spf(' @%s',v.fHz?w1/T/2/pi:w1/T), v.fHz?'Hz':'rad/s'];
+
+		text(sc(1), sc(4) ,txtGM,'tl',Color=[0.8,0,0.8]);
+		text(sc(1), 0   ,txtMs,  'bl',Color=[0,0.8,0]);
+		text(sc(1), 0   ,txtAtMs,'tl',Color=[0,0.8,0]);
+		text(sc(1),-0.8,txtPM,'bl',Color=[0,0.7,0.7]);
+		text(sc(1),-0.8,txtAtPM,'tl',Color=[0,0.7,0.7]);        
+		text(sc(2),sc(3),spf('DM≈%ss',DM),'br',Color=[0,0.7,0.7]);
+	 end 
+    dx=dw*1.2; //15-05-2020
+	plot([-1-dx,-1+dx;-1,-1],[0,0;-dx,dx],'R')
+    label('Re','Im')
+    titStr = 'Char. Nyquista otwartej pętli';
+ //kursor
+	 if PWW 
+		w	= ww(1:length(Z));
+		wk	= min(w(end),max(w(1),wk));
+		xx	= interp1(w,Z,wk);
+		x	= real(xx);
+		y	= imag(xx);
+		fi	= angle(xx);
+		mo	= abs(xx);
+		nLME=info;
+		nLME=nLME(5);
+		if nLME=='6'
+		   plot([0,x],[0,y],':')
+		   plot(x,y,'o'); // kółko - dla Sysq5
+		else
+		   plot([0,x],[0,y],KA?'k-':'k:'); //kursor 
+           kursor(KA,x,x,y,y,Color='Black',id=idFreq);           
+		end
+        fixd = fi*180/pi;
+        zn = fixd>0?'+':'-';
+        titStr = [ spf('Y/E ≈ %4s e',mo),upstr([zn,spf('j%s°',abs(fixd))])];
+        titStr = [titStr, spf(fHz?'   fₓ≈%4sHz':'   ωₓ≈%4srad/s',fHz?wk/T/2/pi:wk/T) ];
+        title(titStr);
+       // wypis_OL = sprintf('|Y/E| = %g  arg(Y/E) = %g   f= %4g Hz ', 1, pi, 2*pi   );
+    end
+    title(titStr);	
+    if ~NL
+        legend(v.typH?'Y/E':'Y''/E','k')
+    end    
+ endfunction
+function (cursor,msg,ixF,wk,id)	=   overNyquistOL(v,ix,id0,m)
+ixF=v.ixF; wk=v.wk;
+
+ if isempty(id0);
+	cursor=false; id=-1;
+ else 
+ 	wwOL = [logspace(log10(1/20),log10(10),2000),logspace(log10(10),log10(1000),1000)]	;
+	wk_  = wwOL(ix);      
+	if ~m & v.KA
+      wk = wk_ ;
+      ww=logspace(-3,2,2000);
+      ww  = unique([ww,logspace(log10(1/2),log10(4),1000)]);        
+      ixF = find(ww >= wk, 1);
+   end
+   cursor=true;	
+   id = id0;   
+ end 
+ if (id==-1) // & ~v.KA
+        msg0= v.KA? '(klik) : zablokowanie kursora   ' : ' '; 
+        msg = [msg0, '(Shift+klik) : wypis pustej linii w oknie komend'];
+ else
+ 	msg0 = ' (klik): pokazanie kursorów ';
+	msg1 = ' (klik): zatrzymanie  (shift+klik) : wypisanie kursorów';
+    if v.KW & v.KA; 
+            msg= ' (klik): zablokowanie   (shift+klik) : wprowadzenie pozycji kursora';
+    elseif v.KW & ~v.KA
+            msg= '(klik) : odblokowanie kursora   ;  (←↓|↑→) :  zmiana pozycji  ;  (Shift+klik) : wypis w oknie komend';
+    else
+        if v.fHz
+            msg = spf('%6sHz',wk_/v.T/2/pi);
+        else
+            msg = spf('%6srad/s',wk_/v.T);
+        end    
+    end
+ end 
+ endfunction 
+function		(KA,wk)		    =	upNyquistOL(v,m,id)
+
+     wk=v.wk;
+     if isempty(id) ; id=-1; end
+     wk=v.wk; KA = v.KA;
+     xB = v.fHz? 1/2/pi/v.T : 1/v.T;
+     switch id
+        case [0,-1]
+            KA = false; 
+            if m ; disp('-') ; end
+        case [idUW,idYW,idFreq, 398]
+            if m & KA & v.PWW
+               strf = 'Częstotliwość fₓ = %7sHz';
+               strw = 'Pulsacja ωₓ = %7srad/s';
+               wk = dialogX(wk, xB, 0.001, 100, str=v.fHz? strf : strw);
+               KA = false; 
+            elseif m    
+               disp(wypis_OL(v))
+            else
+               KA = not(KA);
+            end  
+        otherwise
+            disp('??')
+     end    
+endfunction
+function str                    =   wypis_OL(v)
+    wk  =   v.wk;
+    Z   =   v.Ljw; 
+    ww  =   v.wL ; 
+    w	= ww(1:length(Z));
+    wk	= min(w(end),max(w(1),wk));
+    xx	= interp1(w,Z,wk);
+    x	= real(xx);
+    y	= imag(xx);
+    fi	= angle(xx);
+    mo	= abs(xx);
+    str = sprintf([v.fHz?'fₓ≈%4.2fHz   ':'ωₓ≈%4.2frad/s   ',...
+				'|Y/E|',...
+				'=%5.3f	 φ≈%+4.1f°'],...
+				 v.fHz?wk/2/pi/v.T:wk/v.T,...
+				 mo, fi*180/pi);  
+endfunction
+
+// #####################################################################################
+public	 // schematy.lml, strfind\findstr  
+//spec='∙ª°±²³µ¹ºʰʲʳʷʸ˚˟ˡᵃᵅᵇᵈᵉᵍᵏᵐᵒᵗᵘᵛᵝᵢᵣᵤᵥᵦᵧᵨᵩᵪᶢᶤᶩᶴᶻⁿ⁺⁻⁼⁽⁾₊₋₌₍₎ₐₑₒₓe⁻ˢᵀ′²';
+function schematy
+// Biblioteka 'schematy.lml' 
+// do tworzenia schematów blokowych w automatyce.
+// Elementy schematu rysowane są na płaszczyźnie 
+// liczb zespolnych (Re,Im).
+// Typowa linia programu ma format:
+// pk = funkcja(  p	 ,	dp	 , styl , tekst , id );
+//	 gdzie:
+//	 p		: pozycja bieżąca (wejście elementu) 
+//	 pk		: pozycja koncowa (wyjście elementu)
+//	 dp		: rozmiar elementu (przyrost pozycji)
+//	 styl	: łańcuch znaków dot. sposobu wykreślania
+//	 tekst	: łancuch znaków do wypisania
+//	id		: identyfikator dla interakcji	
+//
+// funkcje:
+//	 napis() , linia() , blok() , wezel() , suma()
+//
+ 
+endfunction
+function    font =  fs(Size=10,Color=[0,0,0],Bold=false,Italic=false,Underline=false)
+	font=fontset('Size',Size,'Color',Color,'Bold',Bold,'Italic',Italic,'Underline',Underline);
+endfunction 
+function    str  = d2s(num) %l.całkowite w łancuch
+	str = sprintf('%d',num);
+endfunction 
+function  indeks =	znajdz( a,b) % ==strfind(Sysquake 5), ==findstr(Sysquake 4)
+nLME=info;
+nLME=nLME(5);
+if nLME>='6'
+   indeks = strfind(a,b);
+   else
+   indeks = findstr(a,b);
+end
+endfunction	  
+function    str =   upstr(str0)
+// górne indeksy - numeryczne i inne możliwe do uzyskania w SegoeUI
+for i=1:length(str0)
+//⁰¹²³⁴⁵⁶⁷⁸⁹
+spec='∙ª°±²³µ¹ºʰʲʳʷʸ˚˟ˡᵃᵅᵇᵈᵉᵍᵏᵐⁿᵒᵗᵘᵛᵝᵢᵣᵤᵥᵦᵧᵨᵩᵪᶢᶤᶩᶴᶻⁿ⁺⁻⁼⁽⁾₊₋₌₍₎ₐₑₒₓe⁻ˢᵀ′²';
+  switch str0(i)
+    case '0'; x='⁰';
+    case '1'; x='¹';
+    case '2'; x='²';   
+    case '3'; x='³';
+    case '4'; x='⁴'; 
+    case '5'; x='⁵';
+    case '6'; x='⁶'; 
+    case '7'; x='⁷';
+    case '8'; x='⁸'; 
+    case '9'; x='⁹'; 
+    case '+'; x='⁺';
+    case '-'; x='⁻'; 
+    case '='; x='⁼'; 
+    case '('; x='⁽'; 
+    case ')'; x='⁾';  
+    case 'j'; x='ʲ';  
+    case '°'; x='˚';
+    case 'w'; x='ʷ';   
+    case '.'; x='∙';//x='ʻ˙';'̇ ͘'   x='∙';    
+    case 's'; x='ˢ';     
+    case 'T'; x='ᵀ';  
+    case '/'; x='′';
+    otherwise;x='ʾ'; 
+   end 
+   str(i)=x;
+ end  
+endfunction
+function    str =   spf(stf,x=3,nsd=3)// format z przyrostkami,
+//	nsd==number of significant digit (3..5) stf:%8s
+
+if ~ischar(stf)
+	nsd=x; x=stf; stf='%6s';
+end
+	str='';
+    
+ for i=1:length(x)
+    xi = x(i); 
+  if abs(xi)>=1e18; xi=xi*1e290; end
+  if abs(xi)<=1e-18; xi=0.0; end
+  
+	xs = sprintf('%n',xi);
+ if strcmp(xs,'1000.0000e-3'); xs='1.0000e0' ; end     // 2020-05-15
+	
+  if strcmp(xs,'inf')|strcmp(xs,'-inf')|strcmp(xs,'nan')
+	
+	xs1=[' ',xs];//sprintf(stf,xs); 
+	xs2=' ';
+  else
+  
+	ix = znajdz(xs,'e' );
+  //xs	
+	if xs(1)=='-'
+		xs1=xs(1:nsd+2);
+	else
+		xs1=['',xs(1:nsd+1)]; // było [' ',xs(... ]
+	end
+	if xs1(end)=='.';
+	   xs1 = [xs1(1:end-1),''];
+	end		   
+suf =xs(ix+1:end);
+	switch suf
+		case '0' ; xs2=' ';	 //było ' '
+		case '3' ; xs2='k';
+		case '6' ; xs2='M'; 
+		case '9' ; xs2='G'; 
+		case '12'; xs2='T';
+        case '15'; xs2='P';
+        case '18'; xs2='E'; 
+		case '-3';
+		if	~isempty(znajdz(xs1,'.'))
+				   xs2='m';
+		else 
+				   xs2='';//' '
+		  xs1=strtrim(xs1);
+		  if xs1(1)=='-'
+			xs1=['-.',xs1(2:end)];
+		  else			  
+			xs1=[' .', xs1]; 
+		  end			 
+		end	   
+		case '-6'; xs2='μ';
+		case '-9'; xs2='n';
+		case '-12';xs2='p';
+		case '-15';xs2='f';
+        case '-18';xs2='a';
+		otherwise
+			xs2 = '?';
+	end 
+       
+  end	
+      
+   str=[str,sprintf(stf,[xs1,xs2])] ;  //!! dodałem spacje - nie było!
+		 
+ end	
+endfunction
+
+function	p	=	napis	( p ,dp=0	,just='c'	,txt=''				,font=[]	)
+//	pk = napis( p , dp , just,	tekst , id )
+// wypisuje wyjustowany tekst na pozycji p	
+// just: 2 znaki z zestawu:'c','l','r','b','u', 
+// tak jak w funkcji standardowej text() 
+//	pk = p + dp
+	if isempty(font) 
+		text( real(p) , imag(p) , txt , just);
+	else
+		text( real(p) , imag(p) , txt , just, font);
+	end 
+	p	=	p + dp;			% aktualizacja pozycji
+endfunction 
+function	p	=	wezel	( p ,dw=0.75,styl='fk'	,txt=''				,font=[]	)
+//			p = wezel ( p , dw	,  styl	 ,	tekst  , id )
+//	rysuje na pozycji p węzeł zaczepowy o średnicy dw
+//	z opcjonalnym opisem tekst; nie modyfikuje pozycji
+	if isempty(dw); dw=0.75; end;
+	r	=	abs( dw / 2 );			% promień  okręgu
+	z	=	p + j*dw;				% podstawa tekstu
+	circle( real ( p ) , imag ( p ) , r , styl );
+	if isempty(font)
+		text  ( real ( z ) , imag ( z ) , txt , 'b');
+	else	
+		text  ( real ( z ) , imag ( z ) , txt , 'b');
+	end
+	p = p; % bez zmiany pozycji
+endfunction
+function	p	=	suma	( p ,dp=2	,styl='k'	,txt=' +-'						)
+//	pk = suma ( p ,	 dp	 ,	styl ,	txt , id )
+//Rysuje okrągły symbol	 węzła sumacyjnego o średnicy
+//i orientacji dp.	Symbole '+','-', lub ' ' pobrane 
+//z łańcucha txt rozmieszczane są w kierunku niezgodnym
+//z ruchem zegara,	zaczynając od wyjścia bloku.
+//Styl może być podwójny jak w rysuj() 
+//	pk = p + dp
+
+	// if nargin < 2 ; dp	 = 2;	end;
+	// if nargin < 4 ; txt =' +-';		end;
+	// if nargin < 3 || isempty( styl ); styl  ='k';	end;	
+	ix	=	znajdz( styl , '|');
+	
+	znaki = ['	 ',txt]; znaki=znaki(end-2:end);
+	
+	r	=	dp/2;		% promień (zesp.) okręgu
+	c	=	p + r;		% centrum sumatora
+	p	=	c + r;		% wyjscie sumatora
+	if isempty( ix )				% jeden styl
+		circle( real(c) , imag(c) , abs( r ) , styl );		
+	else							% dwa style
+		styl1 = styl(1:ix-1);
+		styl2 = styl(ix+1:end);
+		circle( real(c) , imag(c) , abs( r ) , styl1 );
+		circle( real(c) , imag(c) , abs( r ) , styl2 );
+	end
+	
+	for n = 1:3
+		dz= 0.25 * abs ( r );		% rozmiar znaku
+		z = c + 0.5 * r * exp ( n * j * pi/2 );	 % centrum znaku
+		
+		Zh=[z+dz , z-dz , z+dz];	% końce kreski "horyzontalnej"
+		Zw=[z-j*dz , z+j*dz];		% końce kreski wertykalnej	
+		if znaki(n) >= '+'; rysuj( Zh ); end;
+			  % plot(real(Zh),imag(Zh),'k');
+		% end;
+		if znaki(n) == '+'; rysuj( Zw ); end
+			  % plot(real(Zw),imag(Zw),'k'); end;
+	end
+endfunction 
+function	p	=	linia	( p ,dp=3	,styl='k'	,txt=''		,id=[]	,font=[]	)
+//	pk = linia ( p, dp,	  styl , tekst,	 id )
+//Linia prosta od p do pk=p+dp z opcjonalnym tekstem.
+//Znak '|' w stylu oznacza strzałkę na końcu linii
+//i styl podwójny jak w rysuj().
+//Przykłady:
+//	linia(2+j,3) 
+//(cienka czarna pozioma od 2+j do 5+j, bez strzałki)
+//	linia(0,3j,'u','fy|R') 
+//(gruba czerwona pionowa z zółtą strzałką i literą u) 
+ 
+  % parametry grota strzałki
+	dg	= 2.0;//1.8;	% było 1.0
+	
+	if exist( 'dlug_grota' ); dg = dlug_grota; end;
+	sg	=  dg ;
+	if exist( 'szer_grota' ); sg = szer_grota; end;
+	
+	k	=	p	+	dp;			% koniec linii
+	d	=	exp(1j * angle(dp));% wersor w kier.dp 
+	dd	=	d * d;	% dd: 1-->poziomo; -1-->pionowo
+	switch real( dd )
+	case 1		% (horyzontalne)
+		if (d>0); just = 'rb'; else just='lb'; end;
+	case -1		% (pionowe)
+		if imag(d)>0 ; just = 'rt'; else just = 'rb';end;
+	otherwise	% (ukośne)
+		if imag( dd ) > 0;	just='rb';
+		else				just='lb'; end		
+	end;
+	jd	= 0.5j * d * sg ;				% wektor prostopadły do d
+	d	=	dg * d ;		
+	Wg	= [ k-d+jd ,k,	k-d-jd ];	% wierzchołki grota
+	//rysuj([p,k],styl);
+	st=styl;
+	if znajdz(styl,'f');
+		Wg=[Wg,k-d+jd]; 
+		st=lower(styl);
+	end;
+	if znajdz(styl,'|');rysuj([p,k-d],styl); rysuj(Wg,st);
+	else rysuj([p,k],styl); end;
+	if ~isempty(id);	activeregion(real(Wg),imag(Wg),id);end;
+	z	=	k - 1.1* d ;% + dz;			% lekkie odsunięcie od linii (było -1.25*d)
+	if isempty(font)
+		text( real( z ) , imag( z ) , txt , just);	% opis strzałki
+	else
+		text( real( z ) , imag( z ) , txt , just,font); % opis strzałki
+	end 
+	p	=	k;			% aktualizacja pozycji
+endfunction
+function	p	=	blok	( p ,rozm=3 ,styl='k'	,txt=''		,id=[]	,font=[]	)
+//		pk	 =	blok ( p , rozmiar ,  styl ,  txt  , id )
+//	Zorientowany poziomo lub pionowo blok z napisem txt
+//	który może wyrażać ułamek (txt='licznik|mianownik')
+//	Rozmiary i orientacja bloku zależą od rozm = a + j*b
+//	  b==0	--> kwadrat o boku |a|,	 dp=a
+//	  a==0	--> kwadrat o boku |b|,	 dp=j*b	 
+//	  a*b>0 --> prostokąt |a|x|b|,	 dp=a
+//	  a*b<0 --> prostokąt |a|x|b|,	 dp=j*b 
+// Styl może byc podwójny, 
+//	  np 'fy|R' --> żółte tło, gruba czerwona ramka
+
+	a	=	real( rozm );
+	b	=	imag( rozm );
+	switch ( sign(a) * sign(b) )
+	case 1
+		dp	=	a;
+		dw	=	j*b;
+	case -1
+		dp	=	j*b;
+		dw	=	a;	
+	otherwise
+		dp	=	rozm; 
+		dw	=	j*rozm;
+	end
+	c	=	p	+	dp/2;	% centrum prostokąa
+	w1	=	p	+	dw/2 ;	% wierzchołek 1
+	w2	=	w1	+	dp; 
+	w3	=	w2	-	dw;
+	w4	=	w3	-	dp;
+	W	=	[w2,w3,w4,w1,w2];
+	rysuj( W , styl );			
+	if (~isempty(id));
+		activeregion(real(W) , imag(W) , id);
+	end
+
+	ixl = znajdz(txt,'|'); % separator num/den
+
+	if isempty(ixl) ; ix=znajdz(txt,';'); else ix=ixl; end
+	if isempty( ix )
+		if isempty(font)
+			text( real( c ), imag( c ), txt )
+		else
+			text( real( c ), imag( c ), txt, font )
+		end
+	else
+		num = txt( 1	  : ix - 1	);
+		den = txt( ix + 1 : end		);
+		dc	= j * abs( dw )/4;	
+		cn	= c + dc;	% centrum licznika
+		cd	= c - dc;	% centrum mianownika
+		if isempty(font)
+			text ( real( cn ) , imag( cn ), num )
+			text ( real( cd ) , imag( cd ), den )
+		else
+			text ( real( cn ) , imag( cn ), num, font )
+			text ( real( cd ) , imag( cd ), den, font )
+		end 
+		if ~isempty(ixl); linia( c - 0.4 * a , 0.8 * a); end;
+	end
+	p	=	p	+	dp;		% aktualizacja pozycji
+endfunction
+function			rysuj	( Z ,styl='k'  )
+// funkcja pomocnicza : rysuj( Z, styl )
+// wykreśla figurę której wierzchołki są określone
+// przez zespolony wektor Z ; styl może być podwójny,
+// np.:
+//	 'fr|b' - czerwone wypełnienie z niebieską ramką
+//Przykłady:
+//	rysuj(2+j3,'xr')
+//% czerwony krzyżyk na pozycji 2+j3)
+//
+//	rysuj([0,1,j,0],'fy|')
+//% trójkąt prostokątny o wierzchołkach 0, 1, 0+j	 
+//% wykreślony czarną kreską z żółtym wypełnieniem
+	ix	=	znajdz( styl , '|');
+	if isempty( ix )	% jeden styl
+		plot( real( Z ) , imag( Z ) , styl);
+	else % dwa style
+		styl1 = styl(1:ix-1);
+		styl2 = styl(ix+1:end);
+		plot( real( Z ) , imag( Z ),styl1 ) ;
+		plot( real( Z ) , imag( Z ),styl2 ) ;
+	end
+endfunction
+function    k   =   mnoznik ( rozmiar_pix )
+% oblicza współczynnik skalujący rozmiary elementów
+    rp = rozmiar_pix;
+    scale('pixel',rp)
+    dX = rp(2)-rp(1);
+    dY = rp(4)-rp(3);
+    sc=scale;
+    dx=sc(2)-sc(1);
+    dy=sc(4)-sc(3);
+    k=min(dx/dX,dy/dY);
+ endfunction // function str  = d2s(num) %l.całkowite w łancuch
+function    k   =   k12()
+    k = figurestyle('figfont').Size/12;
+    // zmiana dzielnika z 12 na mniej - powiększa elementy bez zmiany 
+    // rozmiaru czcionki
+    //k = mnoznik([-250,250,-150,150]);
+endfunction  
+ 
+ 
+@}
